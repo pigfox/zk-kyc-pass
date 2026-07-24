@@ -1,0 +1,36 @@
+# Echidna configuration for the shared property harness.
+#
+# Run:  echidna . --contract Properties --config echidna.yaml
+#
+# Properties.sol is deliberately the SAME contract Foundry's Invariants.t.sol
+# drives, so a property can never hold in one engine and silently rot in the
+# other.
+#
+# WARNING: artifacts must come from a fresh `forge build`. `forge coverage`
+# overwrites out/ with instrumented artifacts that crytic-compile consumes
+# without complaint, silently registering fewer properties than the source has.
+
+# Assert against the boolean echidna_* predicates rather than Solidity asserts.
+testMode: property
+
+# The harness routes every party through its own Actor contracts, so Echidna's
+# own sender set only needs to reach the harness itself.
+allContracts: false
+
+testLimit: 100000
+# seqLen intentionally matches foundry.toml's invariant depth (64), so both
+# engines walk sequences of the same length.
+seqLen: 64
+shrinkLimit: 5000
+
+# Deterministic runs, so a CI failure is reproducible locally.
+seed: 20260724
+
+corpusDir: echidna-corpus
+
+# Fail loudly rather than reporting a pass when the harness cannot be deployed.
+stopOnFail: true
+
+# Reuse the artifacts `forge build` already produced. Without this,
+# crytic-compile tries to download its own solc, which needs network access.
+cryticArgs: ["--foundry-ignore-compile"]

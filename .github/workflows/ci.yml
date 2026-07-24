@@ -1,0 +1,144 @@
+name: CI
+
+# Everything here runs on a clean checkout with NO secrets. The circuit build,
+# contract build/test/coverage and static analysis never read .env — only local
+# deploy/seed and the live-chain e2e need credentials, and none of that happens
+# in CI.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  circuit:
+    name: circuit (circom compile + snarkjs circuit tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: 20
+
+      - name: Install circom
+        run: |
+          set -euo pipefail
+          curl -sSL -o /usr/local/bin/circom \
+            https://github.com/iden3/circom/releases/download/v2.2.2/circom-linux-amd64
+          chmod +x /usr/local/bin/circom
+          circom --version
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Compile circuit
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/circuit-out
+          circom circuits/kycpass.circom --r1cs --wasm --sym \
+            -l node_modules/circomlib/circuits -o /tmp/circuit-out
+
+      # Drives the checked-in zkey/wasm/vkey through snarkjs: valid proof
+      # verifies; wrong secret/root cannot witness; tampered nullifier and
+      # cross-address proofs are rejected.
+      - name: Circuit tests
+        run: node --test test/circuit/
+
+  # ---------------------------------------------------------------------------
+  forge:
+    name: forge (build, test, invariants, 100% coverage gate)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: stable
+
+      - name: Format check
+        run: forge fmt --check
+
+      - name: Build
+        run: forge build --sizes
+
+      - name: Test (unit, fuzz and invariants)
+        run: forge test -vvv
+
+      - name: Coverage gate (100% on src/, one documented exclusion)
+        run: ./scripts/coverage.sh
+
+      - name: Upload coverage summary
+        if: always()
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: forge-coverage-summary
+          path: coverage-summary.txt
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  go:
+    name: go kycctl (vet, test, 100% coverage gate)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions/setup-go@v5.1.0
+        with:
+          go-version-file: go.mod
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: gofmt check
+        run: |
+          set -euo pipefail
+          out="$(gofmt -l cmd internal)"
+          if [ -n "$out" ]; then echo "::error::gofmt: $out"; exit 1; fi
+
+      - name: Test with coverage
+        run: go test ./... -covermode=set -coverprofile=coverage.out
+
+      - name: Coverage gate (100.0% statements)
+        run: |
+          set -euo pipefail
+          go tool cover -func=coverage.out | tail -20
+          total="$(go tool cover -func=coverage.out | awk '/^total:/ {print $NF}')"
+          echo "total coverage: $total"
+          if [ "$total" != "100.0%" ]; then
+            echo "::error::Go coverage is $total, required 100.0%"
+            go tool cover -func=coverage.out | awk '$NF != "100.0%" && !/^total:/'
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  slither:
+    name: slither (static analysis, 0 findings)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - uses: foundry-rs/foundry-toolchain@v1.3.1
+        with:
+          version: stable
+
+      - name: Build artifacts for crytic-compile
+        run: forge build
+
+      - uses: crytic/slither-action@v0.4.0
+        with:
+          slither-config: slither.config.json
+          slither-args: --ignore-compile
+          fail-on: low
