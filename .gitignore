@@ -35,3 +35,6 @@ coverage.out
 # Issuer tree state (operational, laptop-only). The authoritative root lives in
 # deployments/base-sepolia.json; the leaf list here is regenerable.
 kycctl-state/
+
+# Session tag (convention v1). Local to the working copy, never committed.
+.session-tag

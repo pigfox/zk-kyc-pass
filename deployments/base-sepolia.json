@@ -2,23 +2,23 @@
   "chainId": 84532,
   "network": "base-sepolia",
   "explorer": "https://sepolia.basescan.org",
-  "issuerRoot": "5126388885764234798075309421540162788918268092190330135563545690083708062618",
+  "issuerRoot": "1783919932617732611841171506100175528742041438866706953486195001920508231012",
   "contracts": {
-    "Groth16Verifier": "0x754b372030DfbC42058E040db1A46cB27fDA8a22",
-    "ZKComplianceRegistry": "0xF27e733d05F7BB4105b867C9b4Da201688e64e65",
-    "KYCToken": "0x882BA887fDF70e4206600060161eb8B23903668D"
+    "Groth16Verifier": "0x64c474f7005bD5C52c89c97700D1E495B5288e7c",
+    "ZKComplianceRegistry": "0x025FE429b40030d53427B0D244aCdD7642C59b43",
+    "KYCToken": "0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289"
   },
   "actors": {
-    "deployer": "0x49FE3B2731090b93d297D259BD1eFFC5DB015edF",
-    "investorA": "0x1aA17B67bE685BaBbe9DfE7abA44940b247756D6",
-    "investorB": "0xaF83046d1B3FDDCF894E05Bc293E7f9dE26ee3ec"
+    "deployer": "0xb6c3a56CA2f99e3F5d7d16ad968df9f71cCC184D",
+    "investorA": "0xe2DA56b0f99bAfBC6c8E2c92f647F1F5ffBcc03E",
+    "investorB": "0xfEe552A091c20B9aeC72dC681b0D3Da750C46eEb"
   },
   "token": { "name": "ACME RWA Share", "symbol": "ACME", "decimals": 18, "totalSupply": "5000000000000000000000" },
   "seedNarrative": [
-    { "step": "redeem-deployer", "tx": "0x165aed46592770611400b68f68bbe396ee0e38e9413806980ae0f1d2f62fed84", "status": "success", "label": "Deployer redeems a ZK credential proof and becomes verified" },
-    { "step": "redeem-investorA", "tx": "0xaba6a24e64de54ccd3b230fa2bab9a5d3efec7d3f9cbb05a0db701cd471010d3", "status": "success", "label": "Investor A redeems a ZK credential proof and becomes verified" },
-    { "step": "mint", "tx": "0xd77d62e490fd1937c5a2f7578307f54499f7223882e4d6d039039e22e5926532", "status": "success", "label": "Mint 5,000 ACME to KYC-verified Investor A" },
-    { "step": "transfer-compliant", "tx": "0xbd3d86837f15cf0f9e8e9087ef27bd89cb9d81cf71f2419c4c52f269a5b93366", "status": "success", "label": "Investor A to deployer, 1,000 ACME: both parties verified" },
-    { "step": "transfer-revert", "tx": "0x551280246d1b347fae3bfc84ac26094b4b486ae5db9d0eb905fcd3359a29437f", "status": "reverted", "label": "Investor A to Investor B, 500 ACME: reverts, recipient not verified" }
+    { "step": "redeem-deployer", "tx": "0x1f5c64b08622cd9b8ee76420d9ab0daffc4843195b6223fb7445f3d67ddf9db1", "status": "success", "label": "Deployer redeems a ZK credential proof and becomes verified" },
+    { "step": "redeem-investorA", "tx": "0x5d828c96e1c1e0ed884203ca058b386f524c7ebd05b71e84bfec3497c1727ce2", "status": "success", "label": "Investor A redeems a ZK credential proof and becomes verified" },
+    { "step": "mint", "tx": "0xa556ea1d8e234efc044a3d4214db60a670abdfc8014e1027e18178cdcbe40abe", "status": "success", "label": "Mint 5,000 ACME to KYC-verified Investor A" },
+    { "step": "transfer-compliant", "tx": "0xfe5f6f4f9f187d1ea2fddbbb7a5785a2720dbf927510b669d6a4998fd6d5359b", "status": "success", "label": "Investor A to deployer, 1,000 ACME: both parties verified" },
+    { "step": "transfer-revert", "tx": "0xb2c4035764ed1c766eb3a566b515cb33c476a3f8ca9da4fbb60383ccf3e10c42", "status": "reverted", "label": "Investor A to Investor B, 500 ACME: reverts, recipient not verified" }
   ]
 }

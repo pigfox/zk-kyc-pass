@@ -39,8 +39,11 @@ set -a
 . ./.env
 set +a
 
-: "${DEPLOYER_PRIVATE_KEY:?}" "${DEPLOYER_ADDRESS:?}" "${INVESTOR_A_PK:?}" "${INVESTOR_A_ADDR:?}" "${INVESTOR_B_ADDR:?}"
-RPC="${BASE_SEPOLIA_RPC_URL:-https://sepolia.base.org}"
+: "${DEMO_DEPLOYER_PK:?}" "${DEMO_DEPLOYER_ADDR:?}" "${DEMO_INVESTOR_A_PK:?}" "${DEMO_INVESTOR_A_ADDR:?}" "${DEMO_INVESTOR_B_ADDR:?}"
+# DEMO_RPC_URL wins when set. sepolia.base.org rate-limits a host that has been
+# running the chain suites and then fails as a bare "fetch failed" rather than a
+# 429; the chain-id assertion below is what actually guarantees the network.
+RPC="${DEMO_RPC_URL:-${BASE_SEPOLIA_RPC_URL:-https://sepolia.base.org}}"
 ISSUER_ID="42"
 EXPIRY="4102444800" # 2100-01-01
 export KYC_TREE_STATE="${KYC_TREE_STATE:-./kycctl-state/tree.json}"
@@ -49,13 +52,13 @@ export KYC_TREE_STATE="${KYC_TREE_STATE:-./kycctl-state/tree.json}"
 chain_id="$(cast chain-id --rpc-url "$RPC")"
 [ "$chain_id" = "84532" ] || die "RPC chain id $chain_id, expected 84532 (Base Sepolia)"
 
-dep_derived="$(cast wallet address --private-key "$DEPLOYER_PRIVATE_KEY")"
-[ "${dep_derived,,}" = "${DEPLOYER_ADDRESS,,}" ] || die "DEPLOYER key derives to $dep_derived, not $DEPLOYER_ADDRESS"
-a_derived="$(cast wallet address --private-key "$INVESTOR_A_PK")"
-[ "${a_derived,,}" = "${INVESTOR_A_ADDR,,}" ] || die "INVESTOR_A key derives to $a_derived, not $INVESTOR_A_ADDR"
+dep_derived="$(cast wallet address --private-key "$DEMO_DEPLOYER_PK")"
+[ "${dep_derived,,}" = "${DEMO_DEPLOYER_ADDR,,}" ] || die "DEPLOYER key derives to $dep_derived, not $DEMO_DEPLOYER_ADDR"
+a_derived="$(cast wallet address --private-key "$DEMO_INVESTOR_A_PK")"
+[ "${a_derived,,}" = "${DEMO_INVESTOR_A_ADDR,,}" ] || die "INVESTOR_A key derives to $a_derived, not $DEMO_INVESTOR_A_ADDR"
 
-log "Deployer $DEPLOYER_ADDRESS balance $(cast balance "$DEPLOYER_ADDRESS" --rpc-url "$RPC" --ether) ETH"
-log "InvestorA $INVESTOR_A_ADDR balance $(cast balance "$INVESTOR_A_ADDR" --rpc-url "$RPC" --ether) ETH"
+log "Deployer $DEMO_DEPLOYER_ADDR balance $(cast balance "$DEMO_DEPLOYER_ADDR" --rpc-url "$RPC" --ether) ETH"
+log "InvestorA $DEMO_INVESTOR_A_ADDR balance $(cast balance "$DEMO_INVESTOR_A_ADDR" --rpc-url "$RPC" --ether) ETH"
 
 # --- build the issuer/prover CLI ----------------------------------------------
 KYCCTL="$(mktemp -d)/kycctl"
@@ -69,9 +72,9 @@ SEC_DEP="$(python3 -c "print(int('$(openssl rand -hex 30)',16))")"
 SEC_A="$(python3 -c "print(int('$(openssl rand -hex 30)',16))")"
 
 log "issuing deployer credential (leaf 0)"
-"$KYCCTL" issue --addr "$DEPLOYER_ADDRESS" --expiry "$EXPIRY" --issuer "$ISSUER_ID" --secret "$SEC_DEP" >/dev/null
+"$KYCCTL" issue --addr "$DEMO_DEPLOYER_ADDR" --expiry "$EXPIRY" --issuer "$ISSUER_ID" --secret "$SEC_DEP" >/dev/null
 log "issuing Investor A credential (leaf 1)"
-"$KYCCTL" issue --addr "$INVESTOR_A_ADDR" --expiry "$EXPIRY" --issuer "$ISSUER_ID" --secret "$SEC_A" >/dev/null
+"$KYCCTL" issue --addr "$DEMO_INVESTOR_A_ADDR" --expiry "$EXPIRY" --issuer "$ISSUER_ID" --secret "$SEC_A" >/dev/null
 
 ROOT_DEC="$("$KYCCTL" root | awk '/^root:/ {print $2}')"
 [ -n "$ROOT_DEC" ] || die "failed to read issuer root"
@@ -140,12 +143,12 @@ redeem() { # $1=label $2=addr $3=secret $4=pk  -> echoes tx hash
 }
 
 log "redeeming deployer proof..."
-TX_REDEEM_DEP="$(redeem deployer "$DEPLOYER_ADDRESS" "$SEC_DEP" "$DEPLOYER_PRIVATE_KEY")"
+TX_REDEEM_DEP="$(redeem deployer "$DEMO_DEPLOYER_ADDR" "$SEC_DEP" "$DEMO_DEPLOYER_PK")"
 log "redeeming Investor A proof..."
-TX_REDEEM_A="$(redeem investorA "$INVESTOR_A_ADDR" "$SEC_A" "$INVESTOR_A_PK")"
+TX_REDEEM_A="$(redeem investorA "$DEMO_INVESTOR_A_ADDR" "$SEC_A" "$DEMO_INVESTOR_A_PK")"
 
-poll_eq "deployer verified" "true" "cast call $REGISTRY 'isVerified(address)(bool)' $DEPLOYER_ADDRESS --rpc-url $RPC"
-poll_eq "Investor A verified" "true" "cast call $REGISTRY 'isVerified(address)(bool)' $INVESTOR_A_ADDR --rpc-url $RPC"
+poll_eq "deployer verified" "true" "cast call $REGISTRY 'isVerified(address)(bool)' $DEMO_DEPLOYER_ADDR --rpc-url $RPC"
+poll_eq "Investor A verified" "true" "cast call $REGISTRY 'isVerified(address)(bool)' $DEMO_INVESTOR_A_ADDR --rpc-url $RPC"
 log "both holders verified on chain"
 
 # --- mint + compliant transfer + the showcase revert --------------------------
@@ -154,21 +157,21 @@ XFER_OK_AMT="1000000000000000000000" # 1,000 ACME
 XFER_REVERT_AMT="500000000000000000000" # 500 ACME
 
 log "minting 5,000 ACME to Investor A..."
-TX_MINT="$(cast send "$TOKEN" "mint(address,uint256)" "$INVESTOR_A_ADDR" "$MINT_AMT" \
-    --private-key "$DEPLOYER_PRIVATE_KEY" --rpc-url "$RPC" --json | jq -r '.transactionHash')"
-poll_eq "mint balance" "$MINT_AMT" "cast call $TOKEN 'balanceOf(address)(uint256)' $INVESTOR_A_ADDR --rpc-url $RPC"
+TX_MINT="$(cast send "$TOKEN" "mint(address,uint256)" "$DEMO_INVESTOR_A_ADDR" "$MINT_AMT" \
+    --private-key "$DEMO_DEPLOYER_PK" --rpc-url "$RPC" --json | jq -r '.transactionHash')"
+poll_eq "mint balance" "$MINT_AMT" "cast call $TOKEN 'balanceOf(address)(uint256)' $DEMO_INVESTOR_A_ADDR --rpc-url $RPC"
 
 log "compliant transfer: Investor A -> deployer, 1,000 ACME..."
-TX_XFER_OK="$(cast send "$TOKEN" "transfer(address,uint256)" "$DEPLOYER_ADDRESS" "$XFER_OK_AMT" \
-    --private-key "$INVESTOR_A_PK" --rpc-url "$RPC" --json | jq -r '.transactionHash')"
-poll_eq "deployer received transfer" "$XFER_OK_AMT" "cast call $TOKEN 'balanceOf(address)(uint256)' $DEPLOYER_ADDRESS --rpc-url $RPC"
+TX_XFER_OK="$(cast send "$TOKEN" "transfer(address,uint256)" "$DEMO_DEPLOYER_ADDR" "$XFER_OK_AMT" \
+    --private-key "$DEMO_INVESTOR_A_PK" --rpc-url "$RPC" --json | jq -r '.transactionHash')"
+poll_eq "deployer received transfer" "$XFER_OK_AMT" "cast call $TOKEN 'balanceOf(address)(uint256)' $DEMO_DEPLOYER_ADDR --rpc-url $RPC"
 
 log "SHOWCASE: Investor A -> Investor B, 500 ACME (must REVERT — B is unverified)..."
 # --gas-limit skips estimation (which would abort a reverting tx before broadcast)
 # so the reverting transaction actually lands on chain; --async returns its hash
 # without cast erroring on the status-0 receipt.
-TX_XFER_REVERT="$(cast send "$TOKEN" "transfer(address,uint256)" "$INVESTOR_B_ADDR" "$XFER_REVERT_AMT" \
-    --private-key "$INVESTOR_A_PK" --rpc-url "$RPC" --gas-limit 120000 --async)"
+TX_XFER_REVERT="$(cast send "$TOKEN" "transfer(address,uint256)" "$DEMO_INVESTOR_B_ADDR" "$XFER_REVERT_AMT" \
+    --private-key "$DEMO_INVESTOR_A_PK" --rpc-url "$RPC" --gas-limit 120000 --async)"
 log "revert tx broadcast: $TX_XFER_REVERT — waiting for receipt..."
 # poll until mined
 for _ in $(seq 1 30); do
@@ -183,8 +186,8 @@ case "$REVERT_STATUS" in
 esac
 
 # balances after the story
-BAL_A="$(cast call "$TOKEN" "balanceOf(address)(uint256)" "$INVESTOR_A_ADDR" --rpc-url "$RPC" | awk '{print $1}')"
-BAL_DEP="$(cast call "$TOKEN" "balanceOf(address)(uint256)" "$DEPLOYER_ADDRESS" --rpc-url "$RPC" | awk '{print $1}')"
+BAL_A="$(cast call "$TOKEN" "balanceOf(address)(uint256)" "$DEMO_INVESTOR_A_ADDR" --rpc-url "$RPC" | awk '{print $1}')"
+BAL_DEP="$(cast call "$TOKEN" "balanceOf(address)(uint256)" "$DEMO_DEPLOYER_ADDR" --rpc-url "$RPC" | awk '{print $1}')"
 SUPPLY="$(cast call "$TOKEN" "totalSupply()(uint256)" --rpc-url "$RPC" | awk '{print $1}')"
 
 # --- write deployments/base-sepolia.json --------------------------------------
@@ -202,9 +205,9 @@ cat > deployments/base-sepolia.json <<JSON
     "KYCToken": "$TOKEN"
   },
   "actors": {
-    "deployer": "$DEPLOYER_ADDRESS",
-    "investorA": "$INVESTOR_A_ADDR",
-    "investorB": "$INVESTOR_B_ADDR"
+    "deployer": "$DEMO_DEPLOYER_ADDR",
+    "investorA": "$DEMO_INVESTOR_A_ADDR",
+    "investorB": "$DEMO_INVESTOR_B_ADDR"
   },
   "token": { "name": "ACME RWA Share", "symbol": "ACME", "decimals": 18, "totalSupply": "$SUPPLY" },
   "seedNarrative": [
@@ -227,11 +230,11 @@ forge verify-contract "$VERIFIER" src/Verifier.sol:Groth16Verifier "${V[@]}" \
     || log "WARN: verify Groth16Verifier failed — retry manually"
 log "verifying ZKComplianceRegistry on Basescan..."
 forge verify-contract "$REGISTRY" src/ZKComplianceRegistry.sol:ZKComplianceRegistry "${V[@]}" \
-    --constructor-args "$(cast abi-encode 'constructor(address,uint256,address)' "$VERIFIER" "$ROOT_DEC" "$DEPLOYER_ADDRESS")" \
+    --constructor-args "$(cast abi-encode 'constructor(address,uint256,address)' "$VERIFIER" "$ROOT_DEC" "$DEMO_DEPLOYER_ADDR")" \
     || log "WARN: verify ZKComplianceRegistry failed — retry manually"
 log "verifying KYCToken on Basescan..."
 forge verify-contract "$TOKEN" src/KYCToken.sol:KYCToken "${V[@]}" \
-    --constructor-args "$(cast abi-encode 'constructor(string,string,address,address)' 'ACME RWA Share' 'ACME' "$REGISTRY" "$DEPLOYER_ADDRESS")" \
+    --constructor-args "$(cast abi-encode 'constructor(string,string,address,address)' 'ACME RWA Share' 'ACME' "$REGISTRY" "$DEMO_DEPLOYER_ADDR")" \
     || log "WARN: verify KYCToken failed — retry manually"
 
 log "DONE. balances: A=$BAL_A deployer=$BAL_DEP supply=$SUPPLY"

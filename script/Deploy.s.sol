@@ -23,7 +23,9 @@ contract Deploy is Script {
     string internal constant TOKEN_SYMBOL = "ACME";
 
     function run() external {
-        uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        // DEMO_DEPLOYER_PK is the unified role key shared by all three demo repos
+        // (see pigfox2-repos/KEYS.md for the addresses and what each role may do).
+        uint256 pk = vm.envUint("DEMO_DEPLOYER_PK");
         uint256 initialRoot = vm.envUint("KYC_INITIAL_ROOT");
         address deployer = vm.addr(pk);
 
