@@ -126,10 +126,39 @@ not for real value. See [`SECURITY.md`](./SECURITY.md#trusted-setup-provenance).
 
 ## Deployment
 
-`deployments/base-sepolia.json` records the live addresses and the seed-narrative
-transaction hashes. Deploy + seed are local-only (they read `.env`, never CI); see
-`.env.example`. CI builds the circuit, builds/tests the contracts to 100% coverage,
-and runs Slither — with no secrets.
+Live on Base Sepolia (chain id `84532`), deployed **2026-07-26** at block
+**44641781**:
+
+| Contract | Address |
+|---|---|
+| ZKComplianceRegistry | [`0x025FE429b40030d53427B0D244aCdD7642C59b43`](https://sepolia.basescan.org/address/0x025FE429b40030d53427B0D244aCdD7642C59b43) |
+| KYCToken (ACME) | [`0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289`](https://sepolia.basescan.org/address/0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289) |
+| Groth16Verifier | [`0x64c474f7005bD5C52c89c97700D1E495B5288e7c`](https://sepolia.basescan.org/address/0x64c474f7005bD5C52c89c97700D1E495B5288e7c) |
+
+`deployments/base-sepolia.json` records the live addresses, the issuer root, and
+the seed-narrative transaction hashes. Deploy + seed are local-only (they read
+`.env`, never CI); see `.env.example`. CI builds the circuit, builds/tests the
+contracts to 100% coverage, and runs Slither — with no secrets.
+
+### v1 deployment (retired 2026-07-26)
+
+An earlier deployment ran from 2026-07-22 and is **retired**: its contracts are
+still on chain and keep their own history, but nothing here reads them and none
+of the numbers above belong to them. They are listed because the honest way to
+retire a deployment is to say where it went, not to delete it.
+
+| Contract | Retired address |
+|---|---|
+| ZKComplianceRegistry | [`0xF27e733d05F7BB4105b867C9b4Da201688e64e65`](https://sepolia.basescan.org/address/0xF27e733d05F7BB4105b867C9b4Da201688e64e65) |
+| KYCToken (ACME) | [`0x882BA887fDF70e4206600060161eb8B23903668D`](https://sepolia.basescan.org/address/0x882BA887fDF70e4206600060161eb8B23903668D) |
+| Groth16Verifier | [`0x754b372030DfbC42058E040db1A46cB27fDA8a22`](https://sepolia.basescan.org/address/0x754b372030DfbC42058E040db1A46cB27fDA8a22) |
+
+Deployed at block 44557573, under a different issuer root. Its Investor A was
+[`0x1aA17B67…`](https://sepolia.basescan.org/address/0x1aA17B67bE685BaBbe9DfE7abA44940b247756D6)
+and its never-verified Investor B
+[`0xaF83046d…`](https://sepolia.basescan.org/address/0xaF83046d1B3FDDCF894E05Bc293E7f9dE26ee3ec).
+The rotation that replaced every key and redeployed from scratch is recorded in
+`pigfox2-repos/KEYS.md`.
 
 ## Layout
 
