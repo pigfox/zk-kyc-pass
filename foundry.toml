@@ -6,13 +6,17 @@ solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 
-# crytic-compile (Echidna, Slither) consumes these artifacts directly via
+# crytic-compile (Echidna, Medusa, Slither) consumes these artifacts via
 # --foundry-ignore-compile / --ignore-compile, so it never needs its own solc.
 build_info = true
 extra_output = ["storageLayout"]
 
 remappings = [
     "forge-std/=lib/forge-std/src/",
+    # PIGFOX SOLIDITY PIPELINE v1, vendored as a submodule. The shared property
+    # base lives here; the gate scripts alongside it are what CI runs, so a local
+    # run and a CI run are the same bytes.
+    "pipeline/=lib/solidity-pipeline/src/",
 ]
 
 # Tests read the checked-in fixture proofs; nothing else touches the filesystem.
@@ -28,8 +32,9 @@ runs = 512
 
 [profile.default.invariant]
 runs = 256
-# depth intentionally matches echidna.yaml's seqLen, so both engines walk
-# sequences of the same length and a bug found by one is reachable by the other.
+# depth intentionally matches seqLen in echidna.yaml and callSequenceLength in
+# medusa.json, so all three engines walk sequences of the same length and a bug
+# found by one is reachable by the rest.
 depth = 64
 # Every harness entry point swallows its expected reverts by design, so a revert
 # surfacing here is a harness bug — not a protocol finding — and must fail loud

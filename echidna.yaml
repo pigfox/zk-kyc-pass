@@ -1,14 +1,23 @@
-# Echidna configuration for the shared property harness.
+# Echidna configuration — PIGFOX SOLIDITY PIPELINE v1.
+#
+# Derived from lib/solidity-pipeline/config/echidna.yaml. Only the tuned values
+# differ; the rest is the estate-wide setting, and
+# lib/solidity-pipeline/scripts/property-count.sh is what notices when a run
+# stops meaning it.
 #
 # Run:  echidna . --contract Properties --config echidna.yaml
 #
-# Properties.sol is deliberately the SAME contract Foundry's Invariants.t.sol
-# drives, so a property can never hold in one engine and silently rot in the
-# other.
+# Properties.sol is deliberately the SAME contract Foundry's Invariants.t.sol and
+# Medusa drive, so a property can never hold in one engine and silently rot in
+# another.
 #
 # WARNING: artifacts must come from a fresh `forge build`. `forge coverage`
 # overwrites out/ with instrumented artifacts that crytic-compile consumes
 # without complaint, silently registering fewer properties than the source has.
+# Always `rm -rf crytic-export && forge build --force` first.
+
+# The harness moves no ether — token and credential accounting only.
+balanceContract: 0
 
 # Assert against the boolean echidna_* predicates rather than Solidity asserts.
 testMode: property
@@ -18,8 +27,8 @@ testMode: property
 allContracts: false
 
 testLimit: 100000
-# seqLen intentionally matches foundry.toml's invariant depth (64), so both
-# engines walk sequences of the same length.
+# seqLen intentionally matches foundry.toml's invariant depth and medusa.json's
+# callSequenceLength (64), so all three engines walk sequences of the same length.
 seqLen: 64
 shrinkLimit: 5000
 

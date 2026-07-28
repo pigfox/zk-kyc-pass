@@ -1,58 +1,43 @@
 # Slither exclusions
 
-Slither runs in CI with `fail_on: low` — any finding at low severity or above
-fails the build. The detectors below are excluded in `slither.config.json`, each
-for a documented reason. Nothing else is suppressed: a new finding in our own
-code is a red build.
+**The exclusion list is no longer kept here.** Since this repo adopted the
+[PIGFOX SOLIDITY PIPELINE v1](https://github.com/pigfox/solidity-pipeline) there
+is exactly one Slither configuration in the estate, and every detector it
+excludes is justified in one place:
 
-## Excluded detectors
+→ **[lib/solidity-pipeline/docs/slither-exclusions.md](../lib/solidity-pipeline/docs/slither-exclusions.md)**
 
-### `timestamp` — block-timestamp comparisons (medium)
+The gate is still `fail_on: low`, and a full run over `src/` still reports **zero
+findings**. Nothing else is suppressed: a new finding in our own code is a red
+build.
 
-Two comparisons in `ZKComplianceRegistry` read `block.timestamp`:
+## What this repo contributed to the shared list
 
-- `redeemProof`: `if (expiry <= block.timestamp) revert CredentialExpired(expiry);`
-- `isVerified`: `return verifiedUntil[account] > block.timestamp;`
+`timestamp` was already excluded here, and the reasoning moved across with the
+specifics intact, because in this repo the detector fires on the product itself:
 
-This is the **core design**, not an oversight. A KYC credential has an expiry,
-and verification lapses when it passes — the contract's whole freshness guarantee
-is a timestamp comparison. The block-timestamp detector warns that a miner can
-nudge `block.timestamp` by a few seconds; credential expiries are measured in
-days to months, so a ~15-second skew is immaterial and cannot be used to gain or
-deny verification in any meaningful window. Excluding the detector is correct
-here; the semantics are specified in the brief and documented in SECURITY.md
-("Expiry semantics").
+- `ZKComplianceRegistry.redeemProof`:
+  `if (expiry <= block.timestamp) revert CredentialExpired(expiry);`
+- `ZKComplianceRegistry.isVerified`:
+  `return verifiedUntil[account] > block.timestamp;`
 
-### `naming-convention` (informational)
+A KYC credential has an expiry and verification lapses when it passes — the whole
+freshness guarantee **is** a timestamp comparison. The detector warns that a
+validator can nudge `block.timestamp` by a few seconds; credential expiries are
+measured in days to months, so that skew cannot gain or deny verification in any
+meaningful window. The semantics are specified in the brief and in
+[`SECURITY.md`](../SECURITY.md) under "Expiry semantics".
 
-The contracts follow the RWA-house convention (`decimals`, `identityRegistry`,
-`verifier` in lower/mixedCase for public constants and immutables) to stay
-byte-consistent with the rwa-tokenization-demo they compose with. Renaming to
-`SCREAMING_SNAKE_CASE` would diverge from the sibling repo for no security gain.
+## The coverage exclusion
 
-### `too-many-digits` (informational)
+Separate from Slither, and equally documented: `src/Verifier.sol` is excluded
+from the 100% coverage gate **by name**, not hidden inside a percentage. It is
+generated verbatim by `snarkjs zkey export solidityverifier` (see
+`scripts/build-circuit.sh`) and never hand-edited; its residual uncovered lines
+are the inline-assembly early exits taken when the BN254 precompiles themselves
+report failure, which cannot be provoked from a test. Inputs that are merely
+wrong are rejected by the reachable `checkField` branch, which *is* covered.
 
-Large literal field elements and wei amounts appear in tests and are inherent to
-the domain.
-
-### `solc-version` (informational)
-
-The pragma is pinned to exactly `0.8.28` across the whole tree; the detector's
-generic "use a recent, fixed version" advice is already satisfied.
-
-### `assembly`, `incorrect-return-in-assembly` (informational/low)
-
-Only `src/Verifier.sol` uses inline assembly. It is generated verbatim by
-`snarkjs zkey export solidityverifier` and is never hand-edited (see
-`scripts/build-circuit.sh`). Its assembly is the standard BN254 pairing check.
-
-### `missing-inheritance` (informational)
-
-Slither occasionally suggests a contract "should inherit" an interface it merely
-resembles; not applicable to our explicit interface implementations.
-
-### `low-level-calls` (informational)
-
-Only the test `Actor` forwarder uses a low-level `call`, by design — it needs to
-forward arbitrary calldata and surface reverts as a boolean rather than bubbling
-them. Test-only; `filter_paths` already drops `test/`, this is belt-and-suspenders.
+The verifier is still exercised end-to-end by real Groth16 proofs in
+`test/RealProof.t.sol`, and the pipeline's coverage gate prints the exclusion as
+`SKIP` on every run — and fails the build if it ever stops matching a real file.

@@ -62,6 +62,41 @@ contract InvariantsTest is Test {
         );
     }
 
+    // --- the harness's own declaration --------------------------------------
+
+    /// @dev The count `lib/solidity-pipeline/scripts/property-count.sh` checks
+    ///      statically, checked again here at runtime against the predicates this
+    ///      file actually asserts. The pair is what makes "four properties" mean
+    ///      four: the static gate catches a miscount, this catches a predicate
+    ///      nobody wired up.
+    function test_declaredPropertyCountMatchesThisFile() public view {
+        assertEq(properties.pigfoxPropertyCount(), 4, "declared property count");
+        assertEq(
+            _predicatesDrivenHere(), properties.pigfoxPropertyCount(), "predicates asserted by this file"
+        );
+    }
+
+    function test_harnessSaysWhatItProves() public view {
+        assertEq(
+            properties.pigfoxHarnessDescription(),
+            "a nullifier spends once, only verified addresses hold or move tokens, and supply is conserved"
+        );
+    }
+
+    /// @dev Counted by calling every predicate this file asserts. Deliberately a
+    ///      literal list rather than a number: adding an `invariant_` above
+    ///      without adding it here leaves the two disagreeing, which is the point.
+    function _predicatesDrivenHere() internal view returns (uint256 n) {
+        properties.echidna_nullifier_never_reused();
+        n++;
+        properties.echidna_unverified_never_holds_or_moves();
+        n++;
+        properties.echidna_supply_conserved();
+        n++;
+        properties.echidna_ledger_consistent();
+        n++;
+    }
+
     /// @notice Proves the run was not inert — a property suite that never reaches
     ///         an interesting state reports green forever. Each check is an
     ///         IMPLICATION (success given a registered opportunity), so it holds

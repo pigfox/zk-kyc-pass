@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {PigfoxProperties} from "pipeline/PigfoxProperties.sol";
+
 import {ZKComplianceRegistry} from "../src/ZKComplianceRegistry.sol";
 import {KYCToken} from "../src/KYCToken.sol";
 import {MockVerifier} from "./mocks/MockVerifier.sol";
@@ -20,7 +22,7 @@ import {Actor} from "./Actor.sol";
 ///
 ///      The three invariants the brief names map to {echidna_nullifier_never_reused},
 ///      {echidna_unverified_never_holds_or_moves} and {echidna_supply_conserved}.
-contract Properties {
+contract Properties is PigfoxProperties {
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -202,6 +204,20 @@ contract Properties {
     /// @notice The agent revokes an actor's verification.
     function revoke(uint256 actorSeed) public {
         registry.revoke(address(actorPool[actorSeed % POOL_SIZE]));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                              DECLARATION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc PigfoxProperties
+    function pigfoxPropertyCount() public pure override returns (uint256) {
+        return 4;
+    }
+
+    /// @inheritdoc PigfoxProperties
+    function pigfoxHarnessDescription() public pure override returns (string memory) {
+        return "a nullifier spends once, only verified addresses hold or move tokens, and supply is conserved";
     }
 
     /*//////////////////////////////////////////////////////////////

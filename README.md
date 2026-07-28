@@ -86,15 +86,51 @@ forge install                    # forge-std
 #     verification_key.json,kycpass_js/kycpass.wasm}   (all checked in)
 
 # 3. Contracts
+git submodule update --init --recursive   # brings in lib/solidity-pipeline
 forge build
-forge test                       # 60 tests: units, real-proof integration, invariants
-./scripts/coverage.sh            # 100% on src/ (Verifier.sol excluded, documented)
+forge test                       # 62 tests: units, real-proof integration, invariants
+lib/solidity-pipeline/scripts/coverage.sh    # 100% on src/ (Verifier.sol excluded, by name)
 node --test test/circuit/        # circuit tests via snarkjs
 
-# 4. Static analysis + property fuzzing
-slither . --ignore-compile --config-file slither.config.json      # 0 findings
-echidna . --contract Properties --config echidna.yaml             # 100k calls
+# 4. Static analysis + property fuzzing (both engines)
+slither . --ignore-compile --fail-low \
+  --config-file lib/solidity-pipeline/slither.config.json         # 0 findings
+echidna . --contract Properties --config echidna.yaml             # 4/4, 100k calls
+medusa fuzz --config medusa.json                                  # 4/4, 100k calls
 ```
+
+## Verification
+
+Verified by the
+[**PIGFOX SOLIDITY PIPELINE v1**](https://github.com/pigfox/solidity-pipeline) —
+the estate's single definition of green, consumed rather than copied. The
+pipeline is vendored at `lib/solidity-pipeline`, so the gates that run in CI are
+the same bytes you run locally.
+
+| Gate | Result |
+|---|---|
+| `forge test` | **62 tests**, 5 suites, 4 invariants, 0 reverts |
+| Coverage | **100%** lines / statements / branches / functions on `src/`, one named exclusion |
+| Slither | 0 findings at `fail-on: low` |
+| Echidna | **4/4** properties over 100,000 calls |
+| Medusa | **4/4** properties over 100,000 calls |
+| Circuit | circom compile + snarkjs proof/rejection tests |
+| `kycctl` | `go vet`, gofmt, 100.0% statement coverage |
+
+Medusa and the CI property-fuzzing job are **new**. This repo carried an
+`echidna.yaml` that no CI job ever ran, so the property fuzzing was opt-in on a
+laptop; both engines now run on every push, and each asserts the *number* of
+properties it registered so a predicate that silently stops being picked up fails
+the build rather than reporting a smaller green run.
+
+One harness, `test/Properties.sol`, is driven by all three engines. The four
+properties: a nullifier spends exactly once, an unverified address never holds or
+moves tokens, supply is conserved, and the harness's own success counters never
+outrun the opportunities that produced them.
+
+The single coverage exclusion — `src/Verifier.sol`, generated verbatim by snarkjs
+— is excluded **by name** and printed as `SKIP` on every run, never hidden inside
+a percentage. See [`docs/slither-exclusions.md`](docs/slither-exclusions.md).
 
 ## Issuer / prover CLI (`cmd/kycctl`)
 
