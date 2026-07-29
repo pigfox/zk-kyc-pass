@@ -1,5 +1,7 @@
 # zk-kyc-pass
 
+[![CI](https://github.com/pigfox/zk-kyc-pass/actions/workflows/ci.yml/badge.svg)](https://github.com/pigfox/zk-kyc-pass/actions/workflows/ci.yml)
+
 **Privacy-preserving KYC for tokenized real-world assets.** Prove you hold a valid
 credential from an approved issuer — without revealing which one, who you are, or
 anything else — and become eligible to hold and transfer a compliance-gated
