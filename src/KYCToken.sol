@@ -35,8 +35,15 @@ contract KYCToken is Roles {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice ERC-20 transfer event (mint = from zero).
+    /// @param from The sender, or the zero address when the transfer is a mint.
+    /// @param to The recipient.
+    /// @param value The amount moved. NOT indexed, because ERC-20 fixes this signature —
+    ///        indexing it would change the topic layout and break every standard consumer.
     event Transfer(address indexed from, address indexed to, uint256 value);
     /// @notice ERC-20 approval event.
+    /// @param owner The account whose tokens may now be pulled.
+    /// @param spender The account permitted to pull them.
+    /// @param value The new allowance, which replaces any previous one rather than adding to it.
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /*//////////////////////////////////////////////////////////////
@@ -62,6 +69,10 @@ contract KYCToken is Roles {
     /// @notice The compliance registry consulted on every mint and transfer.
     IIdentityRegistry public immutable identityRegistry;
 
+    /// @notice Binds the token to its compliance registry and sets the deployer as owner.
+    /// @dev `identityRegistry_` is stored as an `immutable`: the compliance gate a holder
+    ///      is judged against is fixed for the life of the token, so it cannot be swapped
+    ///      for a permissive one after balances exist.
     /// @param name_ ERC-20 name.
     /// @param symbol_ ERC-20 symbol.
     /// @param identityRegistry_ The compliance registry address (non-zero).
@@ -80,11 +91,18 @@ contract KYCToken is Roles {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice The token balance of `account`.
+    /// @param account The address to read.
+    /// @return The balance in the token's smallest unit. Unaffected by verification status:
+    ///         losing verification blocks future movement, it never confiscates a balance.
     function balanceOf(address account) external view returns (uint256) {
         return _balances[account];
     }
 
     /// @notice The remaining tokens `spender` may pull from `holder`.
+    /// @param holder The account whose tokens would be pulled.
+    /// @param spender The account permitted to pull them.
+    /// @return The remaining allowance. An allowance is not a promise the transfer will
+    ///         succeed — both parties must still be verified at the moment it is spent.
     function allowance(address holder, address spender) external view returns (uint256) {
         return _allowances[holder][spender];
     }
@@ -94,6 +112,9 @@ contract KYCToken is Roles {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Mint `amount` tokens to `to`. The recipient must be KYC-verified.
+    /// @param to The recipient. Must hold a live verification at this moment, checked
+    ///        against the registry rather than any cached list.
+    /// @param amount The quantity to create, added to `totalSupply`.
     function mint(address to, uint256 amount) external onlyAgent {
         if (to == address(0)) revert ZeroAddress();
         if (!identityRegistry.isVerified(to)) revert RecipientNotVerified(to);
@@ -107,6 +128,9 @@ contract KYCToken is Roles {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Approve `spender` to pull up to `amount` of the caller's tokens.
+    /// @param spender The account permitted to pull. Rejected if zero.
+    /// @param amount The new allowance, replacing any previous value outright.
+    /// @return Always true. The bool exists because ERC-20 specifies it; failures revert.
     function approve(address spender, uint256 amount) external returns (bool) {
         if (spender == address(0)) revert ZeroAddress();
         _allowances[msg.sender][spender] = amount;
@@ -115,6 +139,10 @@ contract KYCToken is Roles {
     }
 
     /// @notice Transfer `amount` tokens to `to`. Both parties must be verified.
+    /// @param to The recipient, which must be verified at this moment.
+    /// @param amount The quantity to move.
+    /// @return Always true; a non-compliant or underfunded transfer reverts rather than
+    ///         returning false, so a caller cannot mistake refusal for success.
     function transfer(address to, uint256 amount) external returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
@@ -122,6 +150,11 @@ contract KYCToken is Roles {
 
     /// @notice Transfer `amount` from `from` to `to` using the caller's allowance.
     ///         Both `from` and `to` must be verified.
+    /// @param from The account whose tokens move; its verification is re-checked here, so
+    ///        an allowance granted while verified is unusable once it lapses.
+    /// @param to The recipient, which must also be verified.
+    /// @param amount The quantity to move, also deducted from the caller's allowance.
+    /// @return Always true; refusals revert.
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         _spendAllowance(from, msg.sender, amount);
         _transfer(from, to, amount);

@@ -28,8 +28,15 @@ abstract contract Roles {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when ownership moves from `previousOwner` to `newOwner`.
+    /// @param previousOwner The outgoing owner. Zero on the constructor's emission, which
+    ///        is what makes the deploy transaction itself the auditable origin of ownership.
+    /// @param newOwner The incoming owner.
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     /// @notice Emitted when `account` is granted (`enabled=true`) or revoked the agent role.
+    /// @param account The account whose agent role changed.
+    /// @param enabled True when the role was granted, false when revoked. Emitted on every
+    ///        call, including a no-op re-grant, so the event log is a complete history of
+    ///        intent rather than only of changes.
     event AgentSet(address indexed account, bool enabled);
 
     /*//////////////////////////////////////////////////////////////
@@ -59,7 +66,10 @@ abstract contract Roles {
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    /// @param initialOwner The account that becomes owner and the first agent.
+    /// @notice Sets the deploying governance account as owner and first agent.
+    /// @param initialOwner The account that becomes owner and the first agent. Rejected if
+    ///        zero: a contract with no owner could never grant an agent, so the whole
+    ///        agent-gated surface would be permanently unreachable.
     constructor(address initialOwner) {
         if (initialOwner == address(0)) revert ZeroAddress();
         owner = initialOwner;
@@ -75,6 +85,9 @@ abstract contract Roles {
     /// @notice Transfer ownership to `newOwner`.
     /// @dev The new owner is NOT granted an agent role automatically; manage
     ///      that separately with {setAgent} if the new owner should also operate.
+    /// @param newOwner The account to hand governance to. Rejected if zero — this contract
+    ///        has no renounce path, so a zero transfer would be an irreversible mistake
+    ///        rather than a deliberate abdication.
     function transferOwnership(address newOwner) external onlyOwner {
         if (newOwner == address(0)) revert ZeroAddress();
         emit OwnershipTransferred(owner, newOwner);
@@ -82,6 +95,10 @@ abstract contract Roles {
     }
 
     /// @notice Grant (`enabled=true`) or revoke the agent role for `account`.
+    /// @param account The account to grant or revoke. Rejected if zero, so the agent
+    ///        mapping can never record a role against the null address.
+    /// @param enabled True to grant, false to revoke. Owner-only, and separate from
+    ///        ownership: an agent operates, an owner governs.
     function setAgent(address account, bool enabled) external onlyOwner {
         if (account == address(0)) revert ZeroAddress();
         agents[account] = enabled;

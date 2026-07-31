@@ -39,12 +39,22 @@ contract ZKComplianceRegistry is Roles, IIdentityRegistry {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when the owner publishes a new credential Merkle root.
+    /// @param newRoot The root now accepted by `redeemProof`. Proofs against any earlier
+    ///        root stop redeeming from this block on, which is what makes rotation the
+    ///        revocation lever for the credential SET.
     event RootUpdated(uint256 indexed newRoot);
     /// @notice Emitted when a holder redeems a proof and becomes verified.
     /// @dev Carries NO identifying data — only the caller, the spent nullifier,
     ///      and the expiry. The nullifier is unlinkable to any credential.
+    /// @param holder The address that became verified; it is bound into the proof, so a
+    ///        third party cannot redeem someone else's credential to their own address.
+    /// @param nullifier The spent nullifier, recorded so the same credential cannot be
+    ///        redeemed twice. It reveals nothing about which credential produced it.
+    /// @param expiry The unix time at which this verification lapses on its own, with no
+    ///        revocation call required.
     event ProofRedeemed(address indexed holder, uint256 nullifier, uint256 expiry);
     /// @notice Emitted when an agent revokes an address's verification early.
+    /// @param holder The address whose verification was cut short before its expiry.
     event VerificationRevoked(address indexed holder);
 
     /*//////////////////////////////////////////////////////////////
@@ -64,6 +74,10 @@ contract ZKComplianceRegistry is Roles, IIdentityRegistry {
     ///         verified or revoked.
     mapping(address account => uint256 until) public verifiedUntil;
 
+    /// @notice Binds the registry to its verifier and publishes the first credential root.
+    /// @dev `verifier_` is stored as an `immutable`, so this constructor is the ONLY point
+    ///      at which the proving key backing this registry can be chosen. Replacing the
+    ///      verifier means redeploying this registry, and KYCToken with it.
     /// @param verifier_ The deployed Groth16 verifier (non-zero).
     /// @param initialRoot The first published credential root (may be zero and
     ///        set later via {setRoot}).
@@ -118,6 +132,9 @@ contract ZKComplianceRegistry is Roles, IIdentityRegistry {
     /// @dev Rotation is the revocation lever for the credential SET: proofs
     ///      against the old root no longer redeem. Verifications ALREADY granted
     ///      persist until their expiry — a documented tradeoff (see SECURITY.md).
+    /// @param newRoot The credential Merkle root to publish. Not validated against zero:
+    ///        publishing zero is a legitimate way to stop all future redemptions while
+    ///        leaving existing verifications to lapse naturally.
     function setRoot(uint256 newRoot) external onlyOwner {
         currentRoot = newRoot;
         emit RootUpdated(newRoot);
@@ -126,6 +143,8 @@ contract ZKComplianceRegistry is Roles, IIdentityRegistry {
     /// @notice Revoke an address's verification immediately.
     /// @dev The per-address emergency lever, complementing root rotation. Sets
     ///      the expiry to zero so {isVerified} returns false at once.
+    /// @param account The address to de-verify. Its spent nullifier is NOT released, so a
+    ///        revoked holder cannot re-redeem the same credential to undo this.
     function revoke(address account) external onlyAgent {
         verifiedUntil[account] = 0;
         emit VerificationRevoked(account);
@@ -138,6 +157,10 @@ contract ZKComplianceRegistry is Roles, IIdentityRegistry {
     /// @notice True while `account` holds a live, unexpired verification.
     /// @dev Verification lapses automatically at expiry — a deliberate feature:
     ///      a stale credential silently stops working with no revocation call.
+    /// @param account The address to test.
+    /// @return True while the address holds an unexpired verification. Strict `>` against
+    ///         `block.timestamp`, so a credential expiring exactly now reads as expired —
+    ///         the conservative direction.
     function isVerified(address account) external view override returns (bool) {
         return verifiedUntil[account] > block.timestamp;
     }

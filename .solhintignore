@@ -1,0 +1,15 @@
+# src/Verifier.sol is generated verbatim by snarkjs from the proving key. Its
+# identifiers, visibility keywords and inline assembly are not ours to change,
+# and the next circuit build would undo any edit. It is already excluded from
+# forge fmt and forge lint (the `ignore` entries in foundry.toml) and from the
+# coverage gate (`coverage-exclusions` in .github/workflows/ci.yml); this is the
+# same carve-out for the same reason, kept at the site rather than in the shared
+# config, because a shared config naming a path that exists in only some repos is
+# a rule about somebody else's tree.
+#
+# PF-S123 ruled that both of the estate's generated verifiers stay
+# generated-and-UNMODIFIED — no Ownable, no edits of any kind — so their source
+# keeps matching the bytecode verified on Basescan. Here that also avoids a
+# cascade: ZKComplianceRegistry holds the verifier address as an `immutable`, so
+# touching the verifier would force the registry and KYCToken to redeploy with it.
+src/Verifier.sol
