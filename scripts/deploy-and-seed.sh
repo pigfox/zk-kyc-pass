@@ -84,16 +84,32 @@ log "issuer root $ROOT_DEC"
 # Deploy WITHOUT --verify: Basescan verification can lag or flake, and we never
 # want that to abort the run after the contracts are already on chain. Source
 # verification runs after the seed (below), non-fatally.
-log "deploying Verifier + Registry(root) + Token to Base Sepolia..."
-KYC_INITIAL_ROOT="$ROOT_DEC" NODE_OPTIONS=--dns-result-order=ipv4first \
-    forge script script/Deploy.s.sol:Deploy \
-    --rpc-url "$RPC" \
-    --broadcast \
-    -vvv
-
-RUN="broadcast/Deploy.s.sol/84532/run-latest.json"
-[ -f "$RUN" ] || die "no broadcast artifact at $RUN"
-VERIFIER="$(jq -r '.transactions[] | select(.contractName=="Groth16Verifier") | .contractAddress' "$RUN" | head -1)"
+# KYC_VERIFIER_ADDR set => reuse that verifier and deploy only the registry and
+# the token. src/Verifier.sol is generated verbatim by snarkjs and is not edited,
+# so on a redeploy driven by changes to the OTHER two contracts there is nothing
+# to regenerate: minting a second verifier would orphan a perfectly good verified
+# one. Unset => full from-scratch deployment, verifier included.
+if [ -n "${KYC_VERIFIER_ADDR:-}" ]; then
+    log "deploying Registry(root) + Token against existing verifier $KYC_VERIFIER_ADDR..."
+    KYC_INITIAL_ROOT="$ROOT_DEC" NODE_OPTIONS=--dns-result-order=ipv4first \
+        forge script script/DeployOnVerifier.s.sol:DeployOnVerifier \
+        --rpc-url "$RPC" \
+        --broadcast \
+        -vvv
+    RUN="broadcast/DeployOnVerifier.s.sol/84532/run-latest.json"
+    [ -f "$RUN" ] || die "no broadcast artifact at $RUN"
+    VERIFIER="$KYC_VERIFIER_ADDR"
+else
+    log "deploying Verifier + Registry(root) + Token to Base Sepolia..."
+    KYC_INITIAL_ROOT="$ROOT_DEC" NODE_OPTIONS=--dns-result-order=ipv4first \
+        forge script script/Deploy.s.sol:Deploy \
+        --rpc-url "$RPC" \
+        --broadcast \
+        -vvv
+    RUN="broadcast/Deploy.s.sol/84532/run-latest.json"
+    [ -f "$RUN" ] || die "no broadcast artifact at $RUN"
+    VERIFIER="$(jq -r '.transactions[] | select(.contractName=="Groth16Verifier") | .contractAddress' "$RUN" | head -1)"
+fi
 REGISTRY="$(jq -r '.transactions[] | select(.contractName=="ZKComplianceRegistry") | .contractAddress' "$RUN" | head -1)"
 TOKEN="$(jq -r '.transactions[] | select(.contractName=="KYCToken") | .contractAddress' "$RUN" | head -1)"
 VERIFIER="$(cast to-checksum "$VERIFIER")"

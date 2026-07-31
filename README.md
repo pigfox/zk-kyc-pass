@@ -164,13 +164,13 @@ not for real value. See [`SECURITY.md`](./SECURITY.md#trusted-setup-provenance).
 
 ## Deployment
 
-Live on Base Sepolia (chain id `84532`), deployed **2026-07-26** at block
-**44641781**:
+Live on Base Sepolia (chain id `84532`), deployed **2026-07-31** at block
+**44880416**:
 
 | Contract | Address |
 |---|---|
-| ZKComplianceRegistry | [`0x025FE429b40030d53427B0D244aCdD7642C59b43`](https://sepolia.basescan.org/address/0x025FE429b40030d53427B0D244aCdD7642C59b43) |
-| KYCToken (ACME) | [`0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289`](https://sepolia.basescan.org/address/0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289) |
+| ZKComplianceRegistry | [`0x83D45db94F12bb8ec3744Ce5C4eAbC5Ed06648bE`](https://sepolia.basescan.org/address/0x83D45db94F12bb8ec3744Ce5C4eAbC5Ed06648bE) |
+| KYCToken (ACME) | [`0x33785A54bC58A8349E71b1424003fb5AC7c42c7D`](https://sepolia.basescan.org/address/0x33785A54bC58A8349E71b1424003fb5AC7c42c7D) |
 | Groth16Verifier | [`0x64c474f7005bD5C52c89c97700D1E495B5288e7c`](https://sepolia.basescan.org/address/0x64c474f7005bD5C52c89c97700D1E495B5288e7c) |
 
 `deployments/base-sepolia.json` records the live addresses, the issuer root, and
