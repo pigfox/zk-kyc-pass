@@ -19,16 +19,18 @@
 [1m[32m⇾[0m[0m [1mInitializing corpus...[0m
 [1m[32m⇾[0m[0m [1mFuzzing with [1m8[0m workers[0m
 [1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_nullifier_never_reused()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_unverified_never_holds_or_moves()[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      0s[0m, calls: [1m         0 (     0/sec)[0m, seq/s: [1m     0[0m, branches: [1m    84[0m, corpus: [1m    0[0m, failures: [1m0/0[0m, gas/s: [1m           0[0m[0m
 [1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_ledger_consistent()[0m[0m
 [1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_supply_conserved()[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      0s[0m, calls: [1m         0 (     0/sec)[0m, seq/s: [1m     0[0m, branches: [1m    84[0m, corpus: [1m    0[0m, failures: [1m0/0[0m, gas/s: [1m           0[0m[0m
-[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_unverified_never_holds_or_moves()[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      3s[0m, calls: [1m     16003 (  5322/sec)[0m, seq/s: [1m    92[0m, branches: [1m   610[0m, corpus: [1m   35[0m, failures: [1m0/277[0m, gas/s: [1m   263288228[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      6s[0m, calls: [1m     33208 (  5729/sec)[0m, seq/s: [1m    88[0m, branches: [1m   616[0m, corpus: [1m   37[0m, failures: [1m0/543[0m, gas/s: [1m   281690658[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      9s[0m, calls: [1m     49244 (  5283/sec)[0m, seq/s: [1m    83[0m, branches: [1m   618[0m, corpus: [1m   38[0m, failures: [1m0/795[0m, gas/s: [1m   260150823[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     12s[0m, calls: [1m     68135 (  6273/sec)[0m, seq/s: [1m    97[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1090[0m, gas/s: [1m   307739716[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     15s[0m, calls: [1m     86568 (  6136/sec)[0m, seq/s: [1m    96[0m, branches: [1m   627[0m, corpus: [1m   41[0m, failures: [1m0/1380[0m, gas/s: [1m   303588627[0m[0m
-[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     18s[0m, calls: [1m    105207 (  6208/sec)[0m, seq/s: [1m    95[0m, branches: [1m   627[0m, corpus: [1m   41[0m, failures: [1m0/1668[0m, gas/s: [1m   308953645[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      3s[0m, calls: [1m     14113 (  4690/sec)[0m, seq/s: [1m    86[0m, branches: [1m   610[0m, corpus: [1m   36[0m, failures: [1m0/261[0m, gas/s: [1m   232079189[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      6s[0m, calls: [1m     26903 (  4252/sec)[0m, seq/s: [1m    66[0m, branches: [1m   613[0m, corpus: [1m   37[0m, failures: [1m0/461[0m, gas/s: [1m   209767020[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      9s[0m, calls: [1m     39112 (  4065/sec)[0m, seq/s: [1m    63[0m, branches: [1m   613[0m, corpus: [1m   37[0m, failures: [1m0/653[0m, gas/s: [1m   197730297[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     12s[0m, calls: [1m     52249 (  4365/sec)[0m, seq/s: [1m    67[0m, branches: [1m   616[0m, corpus: [1m   38[0m, failures: [1m0/857[0m, gas/s: [1m   213805846[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     15s[0m, calls: [1m     66606 (  4762/sec)[0m, seq/s: [1m    74[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1083[0m, gas/s: [1m   232184063[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     18s[0m, calls: [1m     80222 (  4536/sec)[0m, seq/s: [1m    70[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1294[0m, gas/s: [1m   222653868[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     21s[0m, calls: [1m     94709 (  4817/sec)[0m, seq/s: [1m    75[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1520[0m, gas/s: [1m   236337046[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     24s[0m, calls: [1m    108297 (  4525/sec)[0m, seq/s: [1m    70[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1733[0m, gas/s: [1m   224149752[0m[0m
 [1m[32m⇾[0m[0m [1mTransaction test limit reached, halting now...[0m
 [1m[32m⇾[0m[0m [1mFuzzer stopped, test results follow below ...[0m
 [1m[32m⇾[0m[0m [1m[1m[32m[PASSED] [0m[0m[1mProperty Test: Properties.echidna_ledger_consistent()[0m[0m

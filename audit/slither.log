@@ -3,6 +3,6 @@
 === provenance: no-key ===
 
 --ignore-compile used, if something goes wrong, consider removing the ignore compile flag
-INFO:Slither:. analyzed (42 contracts with 90 detectors), 0 result(s) found
+INFO:Slither:. analyzed (43 contracts with 90 detectors), 0 result(s) found
 
 === exit status: 0 ===
