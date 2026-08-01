@@ -108,6 +108,84 @@ contract RealProofTest is Test {
         assertEq(token.totalSupply(), 5000 ether);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                         VERIFIER EDGE CASES
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev The BN254 scalar field modulus, identical to the `r` constant in
+    ///      {Groth16Verifier}. Public signals must be reduced mod r; the
+    ///      generated verifier's `checkField` returns false for anything at or
+    ///      above it, BEFORE any pairing work is attempted.
+    ///
+    ///      These tests exist because `docs/slither-exclusions.md` justifies the
+    ///      `src/Verifier.sol` coverage exclusion by saying the residual
+    ///      uncovered code is the assembly early-exits taken when the BN254
+    ///      precompiles themselves fail, and that inputs which are merely wrong
+    ///      are rejected by the reachable `checkField` branch, "which *is*
+    ///      covered". That sentence was true in zk-escrow, which carries the
+    ///      equivalent tests, and NOT true here: branch coverage on this file
+    ///      read 0.00% (0/3). PF-S134 makes the claim true by writing the tests
+    ///      rather than by softening the prose.
+    ///
+    ///      The boundary is exact and is the case worth pinning: `checkField`
+    ///      tests `lt(v, r)`, so v == r must be rejected. One of these uses
+    ///      exactly r for that reason.
+    uint256 internal constant SCALAR_FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    /// @dev This circuit exposes FOUR public signals — nullifier, root, bound
+    ///      address, expiry — and the verifier calls `checkField` on each one,
+    ///      so each call site gets its own test. zk-escrow's circuit exposes
+    ///      three; this is the same shape widened to the fourth signal rather
+    ///      than a different one.
+    function _pubSignalsWith(uint256 index, uint256 value) internal view returns (uint256[4] memory bad) {
+        bad = pubSignals;
+        bad[index] = value;
+    }
+
+    function test_Verifier_RejectsOutOfRangeNullifier() public view {
+        // Exactly r — the boundary `lt(v, r)` must reject.
+        assertFalse(verifier.verifyProof(pA, pB, pC, _pubSignalsWith(0, SCALAR_FIELD)), "rejected");
+    }
+
+    function test_Verifier_RejectsOutOfRangeRoot() public view {
+        assertFalse(verifier.verifyProof(pA, pB, pC, _pubSignalsWith(1, SCALAR_FIELD + 1)), "rejected");
+    }
+
+    function test_Verifier_RejectsOutOfRangeBoundAddress() public view {
+        assertFalse(verifier.verifyProof(pA, pB, pC, _pubSignalsWith(2, type(uint256).max)), "rejected");
+    }
+
+    function test_Verifier_RejectsOutOfRangeExpiry() public view {
+        assertFalse(verifier.verifyProof(pA, pB, pC, _pubSignalsWith(3, SCALAR_FIELD)), "rejected");
+    }
+
+    /// @dev A point that is not on the curve makes the ecAdd/ecMul precompile
+    ///      fail, which is a different rejection path from a well-formed but
+    ///      wrong proof.
+    function test_Verifier_RejectsOffCurvePoint() public view {
+        uint256[2] memory offCurveA = [uint256(1), uint256(3)];
+        assertFalse(verifier.verifyProof(offCurveA, pB, pC, pubSignals), "rejected");
+    }
+
+    function test_Verifier_RejectsZeroProof() public view {
+        uint256[2] memory zeroA;
+        uint256[2][2] memory zeroB;
+        uint256[2] memory zeroC;
+        assertFalse(verifier.verifyProof(zeroA, zeroB, zeroC, pubSignals), "rejected");
+    }
+
+    /// @notice The registry surfaces a verifier rejection as {InvalidProof},
+    ///         whatever the underlying reason — here an out-of-range nullifier,
+    ///         which passes every registry-level check (root, bound address,
+    ///         expiry and not-yet-spent all still hold) and is stopped only by
+    ///         `checkField` inside the generated verifier.
+    function test_Redeem_RevertsOnOutOfRangeNullifier() public {
+        vm.prank(HOLDER);
+        vm.expectRevert(ZKComplianceRegistry.InvalidProof.selector);
+        registry.redeemProof(pA, pB, pC, _pubSignalsWith(0, SCALAR_FIELD));
+    }
+
     /// @notice A spent nullifier cannot be redeemed a second time, even with a
     ///         genuine proof.
     function test_RealProof_NullifierCannotReplay() public {
