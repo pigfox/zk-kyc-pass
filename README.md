@@ -89,6 +89,9 @@ forge install                    # forge-std
 
 # 3. Contracts
 git submodule update --init --recursive   # brings in lib/solidity-pipeline
+lib/solidity-pipeline/scripts/lint-config-check.sh all
+forge lint                       # bare: a path argument overrides `ignore`
+npx --yes solhint@6.2.3 -c lib/solidity-pipeline/.solhint.json --max-warnings 0 'src/**/*.sol'
 forge build
 forge test                       # 62 tests: units, real-proof integration, invariants
 lib/solidity-pipeline/scripts/coverage.sh    # 100% on src/ (Verifier.sol excluded, by name)
@@ -111,6 +114,7 @@ the same bytes you run locally.
 
 | Gate | Result |
 |---|---|
+| lint — step 1 | `forge lint` and Solhint both clean on `src/`; the copied `[lint]` block matches the canonical one |
 | `forge test` | **62 tests**, 5 suites, 4 invariants, 0 reverts |
 | Coverage | **100%** lines / statements / branches / functions on `src/`, one named exclusion |
 | Slither | 0 findings at `fail-on: low` |
@@ -118,6 +122,14 @@ the same bytes you run locally.
 | Medusa | **4/4** properties over 100,000 calls |
 | Circuit | circom compile + snarkjs proof/rejection tests |
 | `kycctl` | `go vet`, gofmt, 100.0% statement coverage |
+
+Lint runs first because it is cheapest: no fuzzing, no coverage run and no chain,
+so a style or natspec regression fails in seconds instead of after the fuzzers.
+`forge lint` is invoked **bare** — passing it a path overrides the `ignore`
+config, which here would lint the generated `src/Verifier.sol` that the config
+exists to skip. Every rule the estate turns off is argued in the pipeline's
+[`docs/forge-lint-rules.md`](https://github.com/pigfox/solidity-pipeline/blob/main/docs/forge-lint-rules.md)
+and [`docs/solhint-rules.md`](https://github.com/pigfox/solidity-pipeline/blob/main/docs/solhint-rules.md).
 
 Medusa and the CI property-fuzzing job are **new**. This repo carried an
 `echidna.yaml` that no CI job ever ran, so the property fuzzing was opt-in on a

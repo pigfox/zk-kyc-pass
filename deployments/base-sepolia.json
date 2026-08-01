@@ -20,5 +20,21 @@
     { "step": "mint", "tx": "0x75715475698900fe3df85a91053818de3ef65dbecf9a06653ed6e674bb088fa2", "status": "success", "label": "Mint 5,000 ACME to KYC-verified Investor A" },
     { "step": "transfer-compliant", "tx": "0xa41a801e3f86435a4a7590f713cee3f6c7bf16b47e950a64485e4b357de1eaa8", "status": "success", "label": "Investor A to deployer, 1,000 ACME: both parties verified" },
     { "step": "transfer-revert", "tx": "0x09027240ba5756cffdf42c0616139e55f004f42ca64b619a838b5d913c101efd", "status": "reverted", "label": "Investor A to Investor B, 500 ACME: reverts, recipient not verified" }
-  ]
+  ],
+  "supersedes": {
+    "//": "The PF-S123 natspec pass changed ZKComplianceRegistry and KYCToken, so those two were redeployed in PF-S124 and re-verified. The previous generation stays on chain with its own history; the source that produced it is tagged verified-onchain-2026-07-31. Groth16Verifier is ABSENT from this block on purpose: PF-S123 ruled the generated verifiers stay generated-and-unmodified, so it was not redeployed and the address above IS its original one. Recorded in PF-S132 — until then this repo was the only redeployed one whose predecessor addresses were overwritten in place rather than kept.",
+    "contracts": {
+      "ZKComplianceRegistry": "0x025FE429b40030d53427B0D244aCdD7642C59b43",
+      "KYCToken": "0x9Eb9192258e8799E2E0e7AAa7481E17C79Bff289"
+    },
+    "issuerRoot": "1783919932617732611841171506100175528742041438866706953486195001920508231012",
+    "//seedNarrative": "The seed narrative above was re-run in full against the NEW registry, because verification is granted only by redeeming a Groth16 proof and a fresh registry starts empty. These are the transactions that seeded the superseded generation; they are still on chain against the addresses in this block.",
+    "seedNarrative": [
+      { "step": "redeem-deployer", "tx": "0x1f5c64b08622cd9b8ee76420d9ab0daffc4843195b6223fb7445f3d67ddf9db1", "status": "success" },
+      { "step": "redeem-investorA", "tx": "0x5d828c96e1c1e0ed884203ca058b386f524c7ebd05b71e84bfec3497c1727ce2", "status": "success" },
+      { "step": "mint", "tx": "0xa556ea1d8e234efc044a3d4214db60a670abdfc8014e1027e18178cdcbe40abe", "status": "success" },
+      { "step": "transfer-compliant", "tx": "0xfe5f6f4f9f187d1ea2fddbbb7a5785a2720dbf927510b669d6a4998fd6d5359b", "status": "success" },
+      { "step": "transfer-revert", "tx": "0xb2c4035764ed1c766eb3a566b515cb33c476a3f8ca9da4fbb60383ccf3e10c42", "status": "reverted" }
+    ]
+  }
 }
