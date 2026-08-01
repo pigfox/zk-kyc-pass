@@ -1,0 +1,183 @@
+=== /home/peter/Documents/pigfox2-repos/zk-kyc-pass/lib/solidity-pipeline/scripts/coverage.sh --exclude src/Verifier.sol ===
+=== captured by lib/solidity-pipeline/scripts/audit-logs.sh, non-TTY, full verbosity ===
+=== provenance: no-key ===
+
+[1;34m==>[0m Running forge coverage in /home/peter/Documents/pigfox2-repos/zk-kyc-pass
+Warning: optimizer settings and `viaIR` have been disabled for accurate coverage reports.
+If you encounter "stack too deep" errors, consider using `--ir-minimum` which enables `viaIR` with minimum optimization resolving most of the errors
+Compiling 38 files with Solc 0.8.28
+Solc 0.8.28 finished in 3.48s
+Compiler run successful!
+Analysing contracts...
+Running tests...
+
+Ran 17 tests for test/ZKComplianceRegistry.t.sol:ZKComplianceRegistryTest
+[PASS] test_Constructor_EmitsInitialRoot() (gas: 971635)
+[PASS] test_Constructor_RevertsOnZeroVerifier() (gas: 87692)
+[PASS] test_Constructor_SetsState() (gas: 21034)
+[PASS] test_IsVerified_FalseBeforeRedeem() (gas: 10641)
+[PASS] test_IsVerified_LapsesAtExpiry() (gas: 96120)
+[PASS] test_Redeem_HappyPath() (gas: 99473)
+[PASS] test_Redeem_RevertsOnAddressMismatch() (gas: 38358)
+[PASS] test_Redeem_RevertsOnExpired() (gas: 39015)
+[PASS] test_Redeem_RevertsOnExpiryEqualToNow() (gas: 39113)
+[PASS] test_Redeem_RevertsOnInvalidProof() (gas: 48576)
+[PASS] test_Redeem_RevertsOnRootMismatch() (gas: 38880)
+[PASS] test_Redeem_RevertsOnSpentNullifier() (gas: 102233)
+[PASS] test_Revoke_ClearsVerification() (gas: 83918)
+[PASS] test_Revoke_RevertsForNonAgent() (gas: 14837)
+[PASS] test_SetRoot_RevertsForNonOwner() (gas: 14706)
+[PASS] test_SetRoot_RotationInvalidatesOldRootProofs() (gas: 45318)
+[PASS] test_SetRoot_UpdatesAndEmits() (gas: 19911)
+Suite result: ok. 17 passed; 0 failed; 0 skipped; finished in 13.75ms (14.82ms CPU time)
+
+Ran 9 tests for test/PropertiesHarness.t.sol:PropertiesHarnessTest
+[PASS] test_Harness_BadProofDoesNotRedeem() (gas: 112410)
+[PASS] test_Harness_NoOpsWhenNothingRedeemed() (gas: 117724)
+[PASS] test_Harness_RedeemThenMintThenTransfer() (gas: 517684)
+[PASS] test_Harness_ReplayIsRejectedInEpoch() (gas: 234892)
+[PASS] test_Harness_RevokedHolderCannotTransfer() (gas: 437613)
+[PASS] test_Harness_SpentNullifierStaysSpentAcrossRotation() (gas: 243933)
+[PASS] test_Harness_SupplyConservedAcrossTransfer() (gas: 536427)
+[PASS] test_Harness_TransferToUnverifiedRejected() (gas: 353746)
+[PASS] test_Harness_UnverifiedCannotBeMinted() (gas: 82243)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 16.90ms (23.26ms CPU time)
+
+Ran 24 tests for test/KYCToken.t.sol:KYCTokenTest
+[PASS] test_Approve_RevertsOnZeroSpender() (gas: 12216)
+[PASS] test_Approve_SetsAllowanceAndEmits() (gas: 44046)
+[PASS] test_Constructor_RevertsOnZeroOwner() (gas: 42439)
+[PASS] test_Constructor_RevertsOnZeroRegistry() (gas: 90077)
+[PASS] test_Constructor_SetsMetadataAndRoles() (gas: 36102)
+[PASS] test_Mint_RevertsForNonAgent() (gas: 15342)
+[PASS] test_Mint_RevertsForUnverifiedRecipient() (gas: 20792)
+[PASS] test_Mint_RevertsForZeroRecipient() (gas: 11710)
+[PASS] test_Mint_ToVerified() (gas: 72130)
+[PASS] test_NewAgentCanMint() (gas: 96278)
+[PASS] test_Roles_SetAgent() (gas: 33580)
+[PASS] test_Roles_SetAgentRevertsForNonOwner() (gas: 17199)
+[PASS] test_Roles_SetAgentRevertsOnZero() (gas: 11524)
+[PASS] test_Roles_TransferOwnership() (gas: 23674)
+[PASS] test_Roles_TransferOwnershipRevertsForNonOwner() (gas: 14874)
+[PASS] test_Roles_TransferOwnershipRevertsOnZero() (gas: 11197)
+[PASS] test_TransferFrom_InfiniteAllowanceNotDecremented() (gas: 130892)
+[PASS] test_TransferFrom_RevertsOnInsufficientAllowance() (gas: 101049)
+[PASS] test_TransferFrom_SpendsFiniteAllowance() (gas: 133341)
+[PASS] test_Transfer_BothVerified() (gas: 108777)
+[PASS] test_Transfer_RevertsOnInsufficientBalance() (gas: 78151)
+[PASS] test_Transfer_RevertsOnZeroRecipient() (gas: 69080)
+[PASS] test_Transfer_RevertsWhenRecipientNotVerified() (gas: 77178)
+[PASS] test_Transfer_RevertsWhenSenderNotVerified() (gas: 75476)
+Suite result: ok. 24 passed; 0 failed; 0 skipped; finished in 17.61ms (24.84ms CPU time)
+
+Ran 6 tests for test/RealProof.t.sol:RealProofTest
+[PASS] test_RealProof_NullifierCannotReplay() (gas: 317276)
+[PASS] test_RealProof_RedeemThenMint() (gas: 1678879)
+[PASS] test_RealProof_RedeemVerifiesHolder() (gas: 312478)
+[PASS] test_RealProof_RejectedFromOtherAddress() (gas: 44795)
+[PASS] test_RealProof_RejectedOnRotatedRoot() (gas: 55597)
+[PASS] test_RealVerifier_AcceptsFixtureProof() (gas: 246763)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 8.98s (32.98ms CPU time)
+
+Ran 6 tests for test/Invariants.t.sol:InvariantsTest
+[PASS] invariant_LedgerConsistent() (runs: 256, calls: 16384, reverts: 0)
+
+╭------------+--------------------+-------+---------+----------╮
+| Contract   | Selector           | Calls | Reverts | Discards |
++==============================================================+
+| Properties | mint               | 3271  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | redeem             | 4900  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | revoke             | 1630  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | rotateRoot         | 1583  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | setVerifierVerdict | 1698  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | transfer           | 3302  | 0       | 0        |
+╰------------+--------------------+-------+---------+----------╯
+
+[PASS] invariant_NullifierNeverReused() (runs: 256, calls: 16384, reverts: 0)
+
+╭------------+--------------------+-------+---------+----------╮
+| Contract   | Selector           | Calls | Reverts | Discards |
++==============================================================+
+| Properties | mint               | 3271  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | redeem             | 4900  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | revoke             | 1630  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | rotateRoot         | 1583  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | setVerifierVerdict | 1698  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | transfer           | 3302  | 0       | 0        |
+╰------------+--------------------+-------+---------+----------╯
+
+[PASS] invariant_SupplyConserved() (runs: 256, calls: 16384, reverts: 0)
+
+╭------------+--------------------+-------+---------+----------╮
+| Contract   | Selector           | Calls | Reverts | Discards |
++==============================================================+
+| Properties | mint               | 3271  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | redeem             | 4900  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | revoke             | 1630  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | rotateRoot         | 1583  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | setVerifierVerdict | 1698  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | transfer           | 3302  | 0       | 0        |
+╰------------+--------------------+-------+---------+----------╯
+
+[PASS] invariant_UnverifiedNeverMoves() (runs: 256, calls: 16384, reverts: 0)
+
+╭------------+--------------------+-------+---------+----------╮
+| Contract   | Selector           | Calls | Reverts | Discards |
++==============================================================+
+| Properties | mint               | 3271  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | redeem             | 4900  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | revoke             | 1630  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | rotateRoot         | 1583  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | setVerifierVerdict | 1698  | 0       | 0        |
+|------------+--------------------+-------+---------+----------|
+| Properties | transfer           | 3302  | 0       | 0        |
+╰------------+--------------------+-------+---------+----------╯
+
+[PASS] test_declaredPropertyCountMatchesThisFile() (gas: 61205)
+[PASS] test_harnessSaysWhatItProves() (gas: 10480)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 8.98s (28.42s CPU time)
+
+Ran 5 test suites in 8.98s (18.01s CPU time): 62 tests passed, 0 failed, 0 skipped (62 total tests)
+
+╭------------------------------+------------------+------------------+-----------------+-----------------╮
+| File                         | % Lines          | % Statements     | % Branches      | % Funcs         |
++========================================================================================================+
+| src/KYCToken.sol             | 100.00% (41/41)  | 100.00% (41/41)  | 100.00% (10/10) | 100.00% (9/9)   |
+|------------------------------+------------------+------------------+-----------------+-----------------|
+| src/Roles.sol                | 100.00% (18/18)  | 100.00% (18/18)  | 100.00% (5/5)   | 100.00% (5/5)   |
+|------------------------------+------------------+------------------+-----------------+-----------------|
+| src/Verifier.sol             | 90.77% (59/65)   | 90.16% (55/61)   | 0.00% (0/3)     | 100.00% (4/4)   |
+|------------------------------+------------------+------------------+-----------------+-----------------|
+| src/ZKComplianceRegistry.sol | 100.00% (26/26)  | 100.00% (27/27)  | 100.00% (6/6)   | 100.00% (5/5)   |
+|------------------------------+------------------+------------------+-----------------+-----------------|
+| Total                        | 96.00% (144/150) | 95.92% (141/147) | 87.50% (21/24)  | 100.00% (23/23) |
+╰------------------------------+------------------+------------------+-----------------+-----------------╯
+
+[1;34m==>[0m Enforcing 100% coverage on src/ (excluding: src/Verifier.sol)
+  OK    src/KYCToken.sol                         100% lines / statements / branches / functions
+  OK    src/Roles.sol                            100% lines / statements / branches / functions
+  SKIP  src/Verifier.sol                         (documented exclusion)
+  OK    src/ZKComplianceRegistry.sol             100% lines / statements / branches / functions
+
+PASSED: 3 file(s) at 100% on all four metrics (1 documented exclusion(s)).
+
+=== exit status: 0 ===

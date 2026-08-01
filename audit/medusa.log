@@ -1,0 +1,42 @@
+=== medusa fuzz --config medusa.json ===
+=== captured by lib/solidity-pipeline/scripts/audit-logs.sh, non-TTY, full verbosity ===
+=== provenance: no-key ===
+
+[1m[32m⇾[0m[0m [1mReading the configuration file at: [1mmedusa.json[0m[0m
+[1m[32m⇾[0m[0m [1mCompiling targets with [1mcrytic-compile[0m[0m
+[1m[32m⇾[0m[0m [1mRunning command:
+/home/peter/.local/bin/crytic-compile . --export-format solc --foundry-ignore-compile[0m
+[1m[32m⇾[0m[0m [1mFinished compiling targets in 5s[0m
+[1m[32m⇾[0m[0m [1m[1martifacts: [0mMedusa is running against a [1m[32mnew[0m[0m set of build artifacts[0m
+[1m[32m⇾[0m[0m [1mNo Slither cached results found at slither_results.json[0m
+[1m[32m⇾[0m[0m [1mRunning Slither:
+/home/peter/.local/bin/slither . --ignore-compile --print echidna --json -[0m
+[1m[33mwarn[0m[0m [1mFailed to run slither[31m
+‣ exit status 1[0m[0m
+[1m[32m⇾[0m[0m [1mSetting up test chain[0m
+[1m[32m⇾[0m[0m [1mFinished setting up test chain[0m
+[1m[32m⇾[0m[0m [1mCreating corpus...[0m
+[1m[32m⇾[0m[0m [1mInitializing corpus...[0m
+[1m[32m⇾[0m[0m [1mFuzzing with [1m8[0m workers[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_nullifier_never_reused()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_ledger_consistent()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_supply_conserved()[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      0s[0m, calls: [1m         0 (     0/sec)[0m, seq/s: [1m     0[0m, branches: [1m    84[0m, corpus: [1m    0[0m, failures: [1m0/0[0m, gas/s: [1m           0[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[NOT STARTED] [0m[0m[1mProperty Test: Properties.echidna_unverified_never_holds_or_moves()[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      3s[0m, calls: [1m     16003 (  5322/sec)[0m, seq/s: [1m    92[0m, branches: [1m   610[0m, corpus: [1m   35[0m, failures: [1m0/277[0m, gas/s: [1m   263288228[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      6s[0m, calls: [1m     33208 (  5729/sec)[0m, seq/s: [1m    88[0m, branches: [1m   616[0m, corpus: [1m   37[0m, failures: [1m0/543[0m, gas/s: [1m   281690658[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m      9s[0m, calls: [1m     49244 (  5283/sec)[0m, seq/s: [1m    83[0m, branches: [1m   618[0m, corpus: [1m   38[0m, failures: [1m0/795[0m, gas/s: [1m   260150823[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     12s[0m, calls: [1m     68135 (  6273/sec)[0m, seq/s: [1m    97[0m, branches: [1m   624[0m, corpus: [1m   40[0m, failures: [1m0/1090[0m, gas/s: [1m   307739716[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     15s[0m, calls: [1m     86568 (  6136/sec)[0m, seq/s: [1m    96[0m, branches: [1m   627[0m, corpus: [1m   41[0m, failures: [1m0/1380[0m, gas/s: [1m   303588627[0m[0m
+[1m[32m⇾[0m[0m [1m[1mfuzz: [0melapsed: [1m     18s[0m, calls: [1m    105207 (  6208/sec)[0m, seq/s: [1m    95[0m, branches: [1m   627[0m, corpus: [1m   41[0m, failures: [1m0/1668[0m, gas/s: [1m   308953645[0m[0m
+[1m[32m⇾[0m[0m [1mTransaction test limit reached, halting now...[0m
+[1m[32m⇾[0m[0m [1mFuzzer stopped, test results follow below ...[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[PASSED] [0m[0m[1mProperty Test: Properties.echidna_ledger_consistent()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[PASSED] [0m[0m[1mProperty Test: Properties.echidna_nullifier_never_reused()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[PASSED] [0m[0m[1mProperty Test: Properties.echidna_supply_conserved()[0m[0m
+[1m[32m⇾[0m[0m [1m[1m[32m[PASSED] [0m[0m[1mProperty Test: Properties.echidna_unverified_never_holds_or_moves()[0m[0m
+[1m[32m⇾[0m[0m [1mTest summary: [1m[32m4[0m[0m test(s) passed, [1m[31m0[0m[0m test(s) failed[0m
+[1m[32m⇾[0m[0m [1mhtml report(s) saved to: medusa-corpus/coverage/coverage_report.html[0m
+[1m[32m⇾[0m[0m [1mlcov report(s) saved to: medusa-corpus/coverage/lcov.info[0m
+
+=== exit status: 0 ===
