@@ -41,3 +41,23 @@ wrong are rejected by the reachable `checkField` branch, which *is* covered.
 The verifier is still exercised end-to-end by real Groth16 proofs in
 `test/RealProof.t.sol`, and the pipeline's coverage gate prints the exclusion as
 `SKIP` on every run — and fails the build if it ever stops matching a real file.
+
+## The fuzz exclusion
+
+`src/Verifier.sol` is **not driven by Echidna or Medusa**. `test/Properties.sol`
+substitutes `test/mocks/MockVerifier.sol`, so the engines can reach the state
+behind verification rather than spending an entire campaign on proofs that can
+never verify — a valid Groth16 proof is not something a fuzzer can produce.
+
+That substitution was undocumented until PF-S134, which is the same failure as
+the one recorded above it: an exclusion nobody argued in writing is
+indistinguishable from one nobody noticed. The shared reasoning, and a table of
+exactly which tools do and do not reach the file, is in the pipeline's
+[`docs/PROPERTIES.md`](https://github.com/pigfox/solidity-pipeline/blob/main/docs/PROPERTIES.md).
+
+What holds it up **in this repo** is `test/RealProof.t.sol`, which drives the
+real verifier with a checked-in fixture proof: the accepting case, the
+address-binding rejection, the rotated-root rejection, the nullifier replay, an
+out-of-range public signal at each of the four `checkField` call sites, an
+off-curve point, and a zero proof. Without those the exclusion would be
+undefended rather than documented.
