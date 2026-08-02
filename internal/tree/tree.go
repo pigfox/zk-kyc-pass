@@ -97,7 +97,7 @@ func (t *Tree) layers() ([][]*big.Int, error) {
 	current := make([]*big.Int, len(t.leaves))
 	copy(current, t.leaves)
 	all[0] = current
-	for level := 0; level < t.depth; level++ {
+	for level := range t.depth {
 		next, err := t.nextLevel(current, level)
 		if err != nil {
 			return nil, err
@@ -132,7 +132,7 @@ func (t *Tree) Proof(index int) (pathElements []*big.Int, pathIndices []int, roo
 	pathElements = make([]*big.Int, t.depth)
 	pathIndices = make([]int, t.depth)
 	idx := index
-	for level := 0; level < t.depth; level++ {
+	for level := range t.depth {
 		layer := all[level]
 		if idx%2 == 0 {
 			pathIndices[level] = 0

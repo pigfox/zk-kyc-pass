@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -24,7 +25,7 @@ type fakeSnarkjs struct {
 	calldataErr bool
 }
 
-func (f fakeSnarkjs) run(_ string, args ...string) ([]byte, error) {
+func (f fakeSnarkjs) run(_ context.Context, _ string, args ...string) ([]byte, error) {
 	// args == ["--no-install", "snarkjs", <sub>, ...]; classify on the token
 	// position, not a substring scan (the temp dir name contains "prove").
 	sub := args[2]
@@ -73,7 +74,7 @@ func envMap(m map[string]string) func(string) string {
 func runCLI(t *testing.T, env map[string]string, args ...string) (int, string, string) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
-	code := Run(args, &stdout, &stderr, envMap(env))
+	code := Run(context.Background(), args, &stdout, &stderr, envMap(env))
 	return code, stdout.String(), stderr.String()
 }
 
@@ -93,6 +94,10 @@ func issueOne(t *testing.T) (string, map[string]string) {
 	}
 	return statePath, env
 }
+
+// missingRoot is an absolute path that cannot exist, used to force the
+// work-dir failure branch without touching the filesystem.
+const missingRoot = "/no-such-zzz"
 
 func TestRepoRootAndDefaultRunner(t *testing.T) {
 	if got := repoRoot(envMap(map[string]string{consts.EnvRepoRoot: "/custom"})); got != "/custom" {
@@ -131,11 +136,18 @@ func TestIssueCommand(t *testing.T) {
 	}
 	// Default state path branch (no env set): use a temp cwd.
 	dir := t.TempDir()
-	prev, _ := os.Getwd()
+	prev, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
 	if err := os.Chdir(dir); err != nil {
 		t.Fatalf("chdir: %v", err)
 	}
-	defer func() { _ = os.Chdir(prev) }()
+	defer func() {
+		if err := os.Chdir(prev); err != nil {
+			t.Errorf("restore cwd: %v", err)
+		}
+	}()
 	if code, _, errOut := runCLI(t, map[string]string{}, "issue",
 		"--addr", "0x00000000000000000000000000000000000000AA", "--expiry", "1", "--issuer", "2"); code != exitOK {
 		t.Fatalf("default-path issue = (%d,%q)", code, errOut)
@@ -211,7 +223,7 @@ func TestProveWorkDirError(t *testing.T) {
 func TestProveWriteInputError(t *testing.T) {
 	_, env := issueOne(t)
 	// Non-existent work dir makes WriteInput fail.
-	restore := setWorkDir(func() (string, error) { return filepath.Join("/no-such-zzz", "wd"), nil })
+	restore := setWorkDir(func() (string, error) { return filepath.Join(missingRoot, "wd"), nil })
 	defer restore()
 	if code, _, _ := runCLI(t, env, proveArgs()...); code != exitError {
 		t.Fatalf("prove writeinput error code = %d", code)

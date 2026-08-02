@@ -5,6 +5,7 @@
 package cli
 
 import (
+	"context"
 	"crypto/rand"
 	"flag"
 	"fmt"
@@ -36,11 +37,15 @@ var (
 
 // out writes to w, deliberately ignoring terminal write errors.
 func out(w io.Writer, format string, a ...any) {
-	_, _ = fmt.Fprintf(w, format, a...)
+	if _, err := fmt.Fprintf(w, format, a...); err != nil {
+		// Nothing to do: the stream we would report the failure on is the one
+		// that just failed. Read explicitly so the drop is visible.
+		return
+	}
 }
 
 // Run dispatches a kycctl invocation and returns a process exit code.
-func Run(args []string, stdout, stderr io.Writer, getenv func(string) string) int {
+func Run(ctx context.Context, args []string, stdout, stderr io.Writer, getenv func(string) string) int {
 	if len(args) == 0 {
 		out(stderr, "usage: kycctl <issue|root|prove|verify> [flags]\n")
 		return exitUsage
@@ -52,9 +57,9 @@ func Run(args []string, stdout, stderr io.Writer, getenv func(string) string) in
 	case "root":
 		return cmdRoot(rest, stdout, stderr, getenv)
 	case "prove":
-		return cmdProve(rest, stdout, stderr, getenv)
+		return cmdProve(ctx, rest, stdout, stderr, getenv)
 	case "verify":
-		return cmdVerify(rest, stdout, stderr, getenv)
+		return cmdVerify(ctx, rest, stdout, stderr, getenv)
 	default:
 		out(stderr, "unknown command %q; want issue|root|prove|verify\n", cmd)
 		return exitUsage
@@ -125,7 +130,7 @@ func cmdRoot(args []string, stdout, stderr io.Writer, getenv func(string) string
 	return exitOK
 }
 
-func cmdProve(args []string, stdout, stderr io.Writer, getenv func(string) string) int {
+func cmdProve(ctx context.Context, args []string, stdout, stderr io.Writer, getenv func(string) string) int {
 	fs := flag.NewFlagSet("prove", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	addr := fs.String("addr", "", "holder ethereum address (0x-hex)")
@@ -154,7 +159,11 @@ func cmdProve(args []string, stdout, stderr io.Writer, getenv func(string) strin
 		out(stderr, "prove: work dir: %v\n", err)
 		return exitError
 	}
-	defer func() { _ = os.RemoveAll(workDir) }()
+	defer func() {
+		if rmErr := os.RemoveAll(workDir); rmErr != nil {
+			out(stderr, "prove: cleanup %s: %v\n", workDir, rmErr)
+		}
+	}()
 
 	inputPath := filepath.Join(workDir, consts.InputFileName)
 	if err := kyc.WriteInput(inputPath, input); err != nil {
@@ -164,17 +173,17 @@ func cmdProve(args []string, stdout, stderr io.Writer, getenv func(string) strin
 
 	p := prover.New(circuit.KYCPassConfig(repoRoot(getenv)), runnerFactory())
 	witnessPath := filepath.Join(workDir, consts.WitnessFileName)
-	if err := p.Witness(inputPath, witnessPath); err != nil {
+	if err := p.Witness(ctx, inputPath, witnessPath); err != nil {
 		out(stderr, "prove: %v\n", err)
 		return exitError
 	}
 	proofPath := filepath.Join(workDir, consts.ProofFileName)
 	publicPath := filepath.Join(workDir, consts.PublicFileName)
-	if err := p.Prove(witnessPath, proofPath, publicPath); err != nil {
+	if err := p.Prove(ctx, witnessPath, proofPath, publicPath); err != nil {
 		out(stderr, "prove: %v\n", err)
 		return exitError
 	}
-	ok, err := p.Verify(publicPath, proofPath)
+	ok, err := p.Verify(ctx, publicPath, proofPath)
 	if err != nil {
 		out(stderr, "prove: %v\n", err)
 		return exitError
@@ -183,7 +192,7 @@ func cmdProve(args []string, stdout, stderr io.Writer, getenv func(string) strin
 		out(stderr, "prove: local verification failed\n")
 		return exitError
 	}
-	calldata, err := p.Calldata(publicPath, proofPath)
+	calldata, err := p.Calldata(ctx, publicPath, proofPath)
 	if err != nil {
 		out(stderr, "prove: %v\n", err)
 		return exitError
@@ -194,7 +203,7 @@ func cmdProve(args []string, stdout, stderr io.Writer, getenv func(string) strin
 	return exitOK
 }
 
-func cmdVerify(args []string, stdout, stderr io.Writer, getenv func(string) string) int {
+func cmdVerify(ctx context.Context, args []string, stdout, stderr io.Writer, getenv func(string) string) int {
 	fs := flag.NewFlagSet("verify", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	proofDir := fs.String("proof", "", "directory containing proof.json and public.json")
@@ -208,7 +217,7 @@ func cmdVerify(args []string, stdout, stderr io.Writer, getenv func(string) stri
 	proofPath := filepath.Join(*proofDir, consts.ProofFileName)
 	publicPath := filepath.Join(*proofDir, consts.PublicFileName)
 	p := prover.New(circuit.KYCPassConfig(repoRoot(getenv)), runnerFactory())
-	ok, err := p.Verify(publicPath, proofPath)
+	ok, err := p.Verify(ctx, publicPath, proofPath)
 	if err != nil {
 		out(stderr, "verify: %v\n", err)
 		return exitError

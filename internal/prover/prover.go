@@ -6,6 +6,7 @@ package prover
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -17,13 +18,20 @@ import (
 // verifyOKMarker is the substring snarkjs prints for a valid proof.
 const verifyOKMarker = "OK!"
 
-// Runner launches an external command and returns its combined output.
-type Runner func(name string, args ...string) ([]byte, error)
+// Runner launches an external command and returns its combined output. It takes
+// a context so a long-running proof can be canceled with the command that
+// produced it.
+type Runner func(ctx context.Context, name string, args ...string) ([]byte, error)
 
 // OSRunner is the production Runner; it executes the command and captures
-// stdout+stderr together.
-func OSRunner(name string, args ...string) ([]byte, error) {
-	return exec.Command(name, args...).CombinedOutput()
+// stdout+stderr together. Canceling ctx kills the process.
+func OSRunner(ctx context.Context, name string, args ...string) ([]byte, error) {
+	// G204 false positive: launching a named process is this function's entire
+	// contract. Every call site passes consts.NpxBin as name and package
+	// constants plus internally-derived paths as args — none of it is shell
+	// input, and exec.CommandContext does not spawn a shell, so there is
+	// nothing to inject into.
+	return exec.CommandContext(ctx, name, args...).CombinedOutput() //nolint:gosec // G204: constant binary, no shell, args built in-package
 }
 
 // Prover wraps snarkjs for a specific circuit.
@@ -38,16 +46,16 @@ func New(cfg circuit.Config, runner Runner) *Prover {
 }
 
 // run invokes `npx --no-install snarkjs <sub...>` through the injected runner.
-func (p *Prover) run(sub ...string) ([]byte, error) {
+func (p *Prover) run(ctx context.Context, sub ...string) ([]byte, error) {
 	args := make([]string, 0, len(sub)+2)
 	args = append(args, consts.NpxNoInstall, consts.SnarkjsBin)
 	args = append(args, sub...)
-	return p.runner(consts.NpxBin, args...)
+	return p.runner(ctx, consts.NpxBin, args...)
 }
 
 // Witness computes the witness from the circuit wasm and an input JSON file.
-func (p *Prover) Witness(inputPath, witnessPath string) error {
-	out, err := p.run(consts.WtnsCmd, consts.CalculateCmd, p.cfg.Wasm, inputPath, witnessPath)
+func (p *Prover) Witness(ctx context.Context, inputPath, witnessPath string) error {
+	out, err := p.run(ctx, consts.WtnsCmd, consts.CalculateCmd, p.cfg.Wasm, inputPath, witnessPath)
 	if err != nil {
 		return fmt.Errorf("snarkjs witness: %w: %s", err, out)
 	}
@@ -55,8 +63,8 @@ func (p *Prover) Witness(inputPath, witnessPath string) error {
 }
 
 // Prove produces a Groth16 proof and its public signals from the witness.
-func (p *Prover) Prove(witnessPath, proofPath, publicPath string) error {
-	out, err := p.run(consts.Groth16Cmd, consts.ProveCmd, p.cfg.Zkey, witnessPath, proofPath, publicPath)
+func (p *Prover) Prove(ctx context.Context, witnessPath, proofPath, publicPath string) error {
+	out, err := p.run(ctx, consts.Groth16Cmd, consts.ProveCmd, p.cfg.Zkey, witnessPath, proofPath, publicPath)
 	if err != nil {
 		return fmt.Errorf("snarkjs prove: %w: %s", err, out)
 	}
@@ -66,8 +74,8 @@ func (p *Prover) Prove(witnessPath, proofPath, publicPath string) error {
 // Verify checks a proof against the circuit verification key. It returns
 // (true,nil) for a valid proof, (false,nil) for a proof snarkjs reports invalid,
 // and (false,err) when the runner itself fails without an OK verdict.
-func (p *Prover) Verify(publicPath, proofPath string) (bool, error) {
-	out, err := p.run(consts.Groth16Cmd, consts.VerifyCmd, p.cfg.Vkey, publicPath, proofPath)
+func (p *Prover) Verify(ctx context.Context, publicPath, proofPath string) (bool, error) {
+	out, err := p.run(ctx, consts.Groth16Cmd, consts.VerifyCmd, p.cfg.Vkey, publicPath, proofPath)
 	if bytes.Contains(out, []byte(verifyOKMarker)) {
 		return true, nil
 	}
@@ -78,8 +86,8 @@ func (p *Prover) Verify(publicPath, proofPath string) (bool, error) {
 }
 
 // Calldata exports the Solidity calldata (pA, pB, pC, pubSignals) for the proof.
-func (p *Prover) Calldata(publicPath, proofPath string) (string, error) {
-	out, err := p.run(consts.ZkeyCmd, consts.ExportCmd, consts.SolidityCalldataCmd, publicPath, proofPath)
+func (p *Prover) Calldata(ctx context.Context, publicPath, proofPath string) (string, error) {
+	out, err := p.run(ctx, consts.ZkeyCmd, consts.ExportCmd, consts.SolidityCalldataCmd, publicPath, proofPath)
 	if err != nil {
 		return "", fmt.Errorf("snarkjs calldata: %w: %s", err, out)
 	}
