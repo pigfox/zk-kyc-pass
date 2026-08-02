@@ -287,3 +287,57 @@ func TestVerifyCommand(t *testing.T) {
 		t.Fatalf("verify bad flag code = %d", code)
 	}
 }
+
+// failingWriter reports an error on every write, standing in for a closed pipe
+// or a full disk on the command's own output stream.
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("stream closed")
+}
+
+// TestOutDropsWriteErrors pins the contract of out: a command whose output
+// stream has failed has nowhere left to report that, so out must swallow the
+// error rather than panic or propagate it. Run must still return its normal
+// exit code when every write fails.
+func TestOutDropsWriteErrors(t *testing.T) {
+	out(failingWriter{}, "%s\n", "discarded")
+
+	if code := Run(context.Background(), nil, failingWriter{}, failingWriter{}, envMap(nil)); code != exitUsage {
+		t.Errorf("Run with a dead stderr: exit code = %d, want %d", code, exitUsage)
+	}
+}
+
+// TestProveCleanupError covers the branch where removing the per-proof scratch
+// directory fails: prove reports the cleanup failure on stderr instead of
+// discarding it.
+//
+// The failure is induced with a work-dir path ending in ".". os.RemoveAll
+// rejects that with EINVAL from its endsWithDot guard, which runs before it
+// issues any syscall — so the error does not depend on ownership, on the
+// filesystem, or on whether the process is root. A read-only parent directory
+// would have been the obvious alternative and is the wrong choice: root ignores
+// the permission bits, so in a CI container that arrangement would quietly stop
+// inducing the failure and leave this branch uncovered while the test still
+// passed. The premise is asserted below rather than assumed.
+func TestProveCleanupError(t *testing.T) {
+	_, env := issueOne(t)
+
+	// The parent is deliberately never created, so WriteInput fails and prove
+	// returns before it needs a runner; the deferred cleanup still runs.
+	workDir := filepath.Join(t.TempDir(), "wd") + string(filepath.Separator) + "."
+	if err := os.RemoveAll(workDir); err == nil {
+		t.Skip("os.RemoveAll accepted a trailing-dot path here; the cleanup branch cannot be induced")
+	}
+
+	restore := setWorkDir(func() (string, error) { return workDir, nil })
+	defer restore()
+
+	code, _, errOut := runCLI(t, env, proveArgs()...)
+	if code != exitError {
+		t.Fatalf("prove cleanup: code = %d, want %d (stderr=%q)", code, exitError, errOut)
+	}
+	if !strings.Contains(errOut, "cleanup") {
+		t.Fatalf("prove cleanup: stderr does not report the cleanup failure: %q", errOut)
+	}
+}
