@@ -1,4 +1,4 @@
-// Package consts centralises every magic literal used by the kycctl CLI and its
+// Package consts centralizes every magic literal used by the kycctl CLI and its
 // supporting packages: tree geometry, environment keys, default paths, the
 // BN254 scalar field modulus, snarkjs sub-command tokens, and the generic
 // per-proof file names. Keeping them here satisfies the project's
@@ -24,7 +24,7 @@ const (
 	FieldModulusDecimal = "21888242871839275222246405745257275088548364400416034343698204186575808495617"
 )
 
-// Generic per-proof artefact file names (circuit-agnostic).
+// Generic per-proof artifact file names (circuit-agnostic).
 const (
 	InputFileName   = "input.json"
 	WitnessFileName = "witness.wtns"

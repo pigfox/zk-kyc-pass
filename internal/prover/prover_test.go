@@ -1,6 +1,7 @@
 package prover
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -18,7 +19,7 @@ type fakeRunner struct {
 	err      error
 }
 
-func (f *fakeRunner) run(name string, args ...string) ([]byte, error) {
+func (f *fakeRunner) run(_ context.Context, name string, args ...string) ([]byte, error) {
 	f.lastName = name
 	f.lastArgs = args
 	return f.out, f.err
@@ -30,7 +31,7 @@ func newProver(out []byte, err error) (*Prover, *fakeRunner) {
 }
 
 func TestOSRunnerSuccess(t *testing.T) {
-	out, err := OSRunner("echo", "hello")
+	out, err := OSRunner(context.Background(), "echo", "hello")
 	if err != nil {
 		t.Fatalf("OSRunner echo: %v", err)
 	}
@@ -40,32 +41,32 @@ func TestOSRunnerSuccess(t *testing.T) {
 }
 
 func TestOSRunnerError(t *testing.T) {
-	if _, err := OSRunner("kycctl-no-such-binary-zzz"); err == nil {
+	if _, err := OSRunner(context.Background(), "kycctl-no-such-binary-zzz"); err == nil {
 		t.Fatalf("OSRunner missing binary: want error")
 	}
 }
 
 func TestWitness(t *testing.T) {
 	p, fr := newProver(nil, nil)
-	if err := p.Witness("in.json", "w.wtns"); err != nil {
+	if err := p.Witness(context.Background(), "in.json", "w.wtns"); err != nil {
 		t.Fatalf("Witness: %v", err)
 	}
 	if fr.lastName != "npx" {
 		t.Fatalf("runner name = %q", fr.lastName)
 	}
 	p2, _ := newProver([]byte("nope"), errRun)
-	if err := p2.Witness("in.json", "w.wtns"); !errors.Is(err, errRun) {
+	if err := p2.Witness(context.Background(), "in.json", "w.wtns"); !errors.Is(err, errRun) {
 		t.Fatalf("Witness err = %v, want errRun", err)
 	}
 }
 
 func TestProve(t *testing.T) {
 	p, _ := newProver(nil, nil)
-	if err := p.Prove("w.wtns", "proof.json", "public.json"); err != nil {
+	if err := p.Prove(context.Background(), "w.wtns", "proof.json", "public.json"); err != nil {
 		t.Fatalf("Prove: %v", err)
 	}
 	p2, _ := newProver(nil, errRun)
-	if err := p2.Prove("w.wtns", "proof.json", "public.json"); !errors.Is(err, errRun) {
+	if err := p2.Prove(context.Background(), "w.wtns", "proof.json", "public.json"); !errors.Is(err, errRun) {
 		t.Fatalf("Prove err = %v", err)
 	}
 }
@@ -73,19 +74,19 @@ func TestProve(t *testing.T) {
 func TestVerify(t *testing.T) {
 	// Valid: OK! present even alongside a runner error.
 	p, _ := newProver([]byte("[INFO] snarkJS: OK!"), errRun)
-	ok, err := p.Verify("public.json", "proof.json")
+	ok, err := p.Verify(context.Background(), "public.json", "proof.json")
 	if err != nil || !ok {
 		t.Fatalf("Verify valid = (%v,%v)", ok, err)
 	}
 	// Invalid: no OK, no error.
 	p2, _ := newProver([]byte("snarkJS: INVALID"), nil)
-	ok, err = p2.Verify("public.json", "proof.json")
+	ok, err = p2.Verify(context.Background(), "public.json", "proof.json")
 	if err != nil || ok {
 		t.Fatalf("Verify invalid = (%v,%v)", ok, err)
 	}
 	// Runner error with no OK marker.
 	p3, _ := newProver([]byte("crash"), errRun)
-	ok, err = p3.Verify("public.json", "proof.json")
+	ok, err = p3.Verify(context.Background(), "public.json", "proof.json")
 	if ok || !errors.Is(err, errRun) {
 		t.Fatalf("Verify error = (%v,%v)", ok, err)
 	}
@@ -93,7 +94,7 @@ func TestVerify(t *testing.T) {
 
 func TestCalldata(t *testing.T) {
 	p, _ := newProver([]byte("  [\"0x1\"]  \n"), nil)
-	got, err := p.Calldata("public.json", "proof.json")
+	got, err := p.Calldata(context.Background(), "public.json", "proof.json")
 	if err != nil {
 		t.Fatalf("Calldata: %v", err)
 	}
@@ -101,7 +102,7 @@ func TestCalldata(t *testing.T) {
 		t.Fatalf("Calldata = %q", got)
 	}
 	p2, _ := newProver(nil, errRun)
-	if _, err := p2.Calldata("public.json", "proof.json"); !errors.Is(err, errRun) {
+	if _, err := p2.Calldata(context.Background(), "public.json", "proof.json"); !errors.Is(err, errRun) {
 		t.Fatalf("Calldata err = %v", err)
 	}
 }

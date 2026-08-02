@@ -89,7 +89,7 @@ func AddrToField(addr string) (*big.Int, error) {
 	if len(s) != addrHexLen {
 		return nil, fmt.Errorf("%w: want %d hex digits, got %d", ErrInvalidAddr, addrHexLen, len(s))
 	}
-	x, ok := new(big.Int).SetString(s, 16)
+	x, ok := new(big.Int).SetString(s, hexBase)
 	if !ok {
 		return nil, fmt.Errorf("%w: %q", ErrInvalidAddr, addr)
 	}
@@ -126,7 +126,7 @@ func RandomSecret(r io.Reader) (*big.Int, error) {
 
 // HexField renders a field element as 0x-prefixed hex.
 func HexField(x *big.Int) string {
-	return "0x" + x.Text(16)
+	return "0x" + x.Text(hexBase)
 }
 
 // parseField parses a non-negative decimal field element.
@@ -160,7 +160,7 @@ func resolveSecret(secret string, r io.Reader) (*big.Int, error) {
 
 // LoadState reads and decodes a state file.
 func LoadState(path string) (*State, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("kyc: read state %q: %w", path, err)
 	}
@@ -191,10 +191,10 @@ func SaveState(path string, s *State) error {
 		return fmt.Errorf("kyc: marshal state: %w", err)
 	}
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, stateDirPerm); err != nil {
 		return fmt.Errorf("kyc: mkdir %q: %w", dir, err)
 	}
-	if err := os.WriteFile(path, data, 0o600); err != nil {
+	if err := os.WriteFile(path, data, stateFilePerm); err != nil {
 		return fmt.Errorf("kyc: write state %q: %w", path, err)
 	}
 	return nil
@@ -206,7 +206,7 @@ func WriteInput(path string, input CircuitInput) error {
 	if err != nil {
 		return fmt.Errorf("kyc: marshal input: %w", err)
 	}
-	if err := os.WriteFile(path, data, 0o600); err != nil {
+	if err := os.WriteFile(path, data, stateFilePerm); err != nil {
 		return fmt.Errorf("kyc: write input %q: %w", path, err)
 	}
 	return nil

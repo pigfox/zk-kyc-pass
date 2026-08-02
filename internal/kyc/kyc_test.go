@@ -51,6 +51,10 @@ func writeFile(t *testing.T, path, content string) {
 	}
 }
 
+// missingDir is an absolute path that cannot exist, used to force write
+// failures without touching the filesystem.
+const missingDir = "/no-such-dir-zzz"
+
 func TestAddrToField(t *testing.T) {
 	got, err := AddrToField(validAddr)
 	if err != nil {
@@ -220,7 +224,7 @@ func TestWriteInput(t *testing.T) {
 	if !errors.Is(err, errBoom) {
 		t.Fatalf("WriteInput marshal err = %v", err)
 	}
-	if err := WriteInput(filepath.Join("/no-such-dir-zzz", "input.json"), in); err == nil {
+	if err := WriteInput(filepath.Join(missingDir, "input.json"), in); err == nil {
 		t.Fatalf("WriteInput bad dir: want error")
 	}
 }

@@ -94,7 +94,7 @@ func TestProofReconstructsRoot(t *testing.T) {
 	for _, n := range []int{1, 2, 3, 5, 8} {
 		tr := realTree(t, depth)
 		leaves := make([]*big.Int, n)
-		for i := 0; i < n; i++ {
+		for i := range n {
 			leaves[i] = big.NewInt(int64(100 + i))
 			tr.Append(leaves[i])
 		}
@@ -102,7 +102,7 @@ func TestProofReconstructsRoot(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Root: %v", err)
 		}
-		for i := 0; i < n; i++ {
+		for i := range n {
 			pe, pi, proot, err := tr.Proof(i)
 			if err != nil {
 				t.Fatalf("Proof(%d): %v", i, err)
@@ -114,7 +114,7 @@ func TestProofReconstructsRoot(t *testing.T) {
 				t.Fatalf("path length = %d/%d, want %d", len(pe), len(pi), depth)
 			}
 			h := new(big.Int).Set(leaves[i])
-			for lvl := 0; lvl < depth; lvl++ {
+			for lvl := range depth {
 				var pair []*big.Int
 				if pi[lvl] == 0 {
 					pair = []*big.Int{h, pe[lvl]}

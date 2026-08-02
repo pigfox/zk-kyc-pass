@@ -11,29 +11,29 @@ import (
 	"github.com/pigfox/zk-kyc-pass/internal/consts"
 )
 
-// Config describes one Groth16 circuit's on-disk build artefacts.
+// Config describes one Groth16 circuit's on-disk build artifacts.
 type Config struct {
 	Name     string // circuit name, e.g. "kycpass".
 	Depth    int    // Merkle depth the circuit expects.
-	BuildDir string // directory containing the build artefacts.
+	BuildDir string // directory containing the build artifacts.
 	Wasm     string // witness-calculator wasm.
 	Zkey     string // proving key (final).
 	Vkey     string // verification key JSON.
 }
 
-// kycpass build-artefact names, fixed by the circuit's build.
+// kycpass build-artifact names, fixed by the circuit's build.
 const (
 	kycpassName    = "kycpass"
 	buildDirName   = "build"
 	circuitsDir    = "circuits"
 	kycpassWasm    = "kycpass.wasm"
-	kycpassJSDir   = "kycpass_js"
-	kycpassZkey    = "kycpass_final.zkey"
+	kycpassJSDir   = "kycpass_js"         //nolint:gosec // G101 false positive: a build-output directory name, not a credential
+	kycpassZkey    = "kycpass_final.zkey" //nolint:gosec // G101 false positive: a proving-key filename, not a credential
 	verificationVK = "verification_key.json"
 )
 
 // KYCPassConfig returns the Config for the kycpass circuit, rooted at repoRoot.
-// Artefacts live under <repoRoot>/circuits/build.
+// Artifacts live under <repoRoot>/circuits/build.
 func KYCPassConfig(repoRoot string) Config {
 	build := filepath.Join(repoRoot, circuitsDir, buildDirName)
 	return Config{
@@ -46,7 +46,7 @@ func KYCPassConfig(repoRoot string) Config {
 	}
 }
 
-// delivery build-artefact names. These mirror kycpass's layout for the sibling
+// delivery build-artifact names. These mirror kycpass's layout for the sibling
 // zk-escrow delivery.circom circuit.
 const (
 	deliveryName    = "delivery"
