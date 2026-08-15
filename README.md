@@ -224,4 +224,5 @@ docs/            slither-exclusions.md
 ## License
 
 MIT. Circuit artifacts and the generated verifier carry their snarkjs-emitted
-GPL-3.0 header where applicable.
+GPL-3.0 header where applicable. See [LICENSE](LICENSE) for the grant and
+[NOTICE](NOTICE) for the exception.

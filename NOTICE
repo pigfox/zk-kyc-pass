@@ -1,0 +1,7 @@
+EXCEPTION
+
+The MIT grant in LICENSE does not extend to the circuit artifacts or the
+generated verifier, which carry their snarkjs-emitted GPL-3.0 header where
+applicable. src/Verifier.sol declares SPDX-License-Identifier: GPL-3.0 and is
+governed by GPL-3.0, not by the terms in LICENSE. Its copyright is held by
+0KIMS association and not by Pigfox LLC.
